@@ -31,6 +31,7 @@ export const auth = createNeonAuth({
   baseUrl,
   cookies: {
     secret: cookieSecret,
+    sameSite: "lax",
   },
-  logLevel: process.env.NODE_ENV === "development" ? "debug" : "error",
+  logLevel: process.env.NODE_ENV === "development" ? "debug" : "warn",
 });
