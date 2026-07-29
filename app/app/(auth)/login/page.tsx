@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand-logo";
+import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { useAuth } from "@/components/providers/auth-provider";
 import { sendSignupVerificationOtp } from "@/lib/auth/verification";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,13 @@ export default function LoginPage() {
       router.replace("/today");
     }
   }, [authLoading, user, router]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "oauth") {
+      toast.error("Social sign-in failed. Try again or use email.");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -70,7 +78,13 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-1 flex-col gap-5">
+      <div className="flex flex-1 flex-col gap-5">
+        <SocialAuthButtons disabled={pending} labelPrefix="Continue" />
+
+        <form
+          onSubmit={(e) => void handleSubmit(e)}
+          className="flex flex-col gap-5"
+        >
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -119,7 +133,8 @@ export default function LoginPage() {
             Create an account
           </Link>
         </p>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

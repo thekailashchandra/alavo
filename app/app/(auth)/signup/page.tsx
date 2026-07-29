@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/verification";
 import { passwordSchema } from "@/lib/validations";
 import { BrandLogo } from "@/components/brand-logo";
+import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -108,10 +109,13 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <form
-        onSubmit={(e) => void handleSubmit(e)}
-        className="flex flex-1 flex-col gap-5"
-      >
+      <div className="flex flex-1 flex-col gap-5">
+        <SocialAuthButtons disabled={pending} labelPrefix="Continue" />
+
+        <form
+          onSubmit={(e) => void handleSubmit(e)}
+          className="flex flex-col gap-5"
+        >
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
           <Input
@@ -177,7 +181,8 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

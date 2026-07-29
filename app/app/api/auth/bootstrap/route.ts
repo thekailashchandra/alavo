@@ -6,6 +6,7 @@ import { z } from "zod";
 
 const bootstrapSchema = z.object({
   timezone: z.string().min(1).max(64).optional(),
+  provider: z.enum(["EMAIL", "GOOGLE"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -22,6 +23,11 @@ export async function POST(req: NextRequest) {
       where: { id: user.id },
       data: {
         timezone: data.timezone || user.timezone,
+        ...(data.provider ? { provider: data.provider } : {}),
+        // OAuth providers mark email verified at Neon; mirror locally
+        ...(data.provider === "GOOGLE" && !user.emailVerified
+          ? { emailVerified: new Date() }
+          : {}),
       },
       select: {
         id: true,
