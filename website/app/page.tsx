@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { BrandLogo, brand } from "@alavo/brand";
 
-const appUrl =
-  process.env.NEXT_PUBLIC_PRODUCT_URL || "http://localhost:3000";
+const appUrl = (
+  process.env.NEXT_PUBLIC_PRODUCT_URL || "https://app.alavo.cc"
+).replace(/\/$/, "");
 
 export default function HomePage() {
   return (
