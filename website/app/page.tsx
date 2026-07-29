@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BrandLogo, brand } from "@alavo/brand";
+import { BrandLogo } from "@alavo/brand";
 
 const appUrl = (
   process.env.NEXT_PUBLIC_PRODUCT_URL || "https://app.alavo.cc"
@@ -21,6 +21,12 @@ export default function HomePage() {
           />
           <nav className="flex items-center gap-3 text-sm">
             <Link
+              href="/privacy"
+              className="hidden text-[var(--muted)] transition hover:text-[var(--foreground)] sm:inline"
+            >
+              Privacy
+            </Link>
+            <Link
               href={`${appUrl}/login`}
               className="text-[var(--muted)] transition hover:text-[var(--foreground)]"
             >
@@ -37,16 +43,26 @@ export default function HomePage() {
 
         <section className="flex flex-1 flex-col justify-center gap-6 py-16 md:max-w-2xl md:py-24">
           <h1 className="brand-title text-5xl leading-none tracking-tight text-[var(--foreground)] md:text-7xl">
-            {brand.name}
+            Alavo
           </h1>
           <p className="text-xl font-medium leading-snug text-[var(--foreground)] md:text-2xl">
-            A calm habit tracker for daily rituals, honest streaks, and quiet
-            reflection.
+            Alavo is a habit tracking app for building daily routines, keeping
+            streaks, and reflecting in a simple journal.
           </p>
-          <p className="max-w-md text-base leading-relaxed text-[var(--muted)] md:text-lg">
-            Alavo helps you build consistent habits on your phone — log what you
-            did today, keep streaks without noise, and reflect in a simple
-            journal. Sign in with email or Google to start free.
+          <p className="max-w-lg text-base leading-relaxed text-[var(--muted)] md:text-lg">
+            With Alavo you can create habits, mark them complete each day, track
+            consistency over time, and write short reflections. When you choose
+            Continue with Google, Alavo uses your Google account name and email
+            only to create and sign you into your Alavo account — we do not sell
+            your data. Read our{" "}
+            <Link href="/privacy" className="text-[var(--primary)] underline underline-offset-2">
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link href="/terms" className="text-[var(--primary)] underline underline-offset-2">
+              Terms of Service
+            </Link>
+            .
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
@@ -59,14 +75,14 @@ export default function HomePage() {
               href={`${appUrl}/login`}
               className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white/60 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
             >
-              Sign in
+              Sign in to Alavo
             </Link>
           </div>
         </section>
 
         <footer className="flex flex-wrap items-center gap-x-4 gap-y-2 pb-4 text-sm text-[var(--muted)]">
           <span>
-            © {new Date().getFullYear()} {brand.name}
+            © {new Date().getFullYear()} Alavo
           </span>
           <Link href="/privacy" className="hover:text-[var(--foreground)]">
             Privacy
