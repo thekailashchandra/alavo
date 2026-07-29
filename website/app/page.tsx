@@ -15,7 +15,10 @@ export default function HomePage() {
 
       <div className="relative mx-auto flex min-h-dvh max-w-5xl flex-col px-6 py-8 md:px-10">
         <header className="flex items-center justify-between gap-4">
-          <BrandLogo priority className="h-auto w-[140px] object-contain object-left md:w-[170px]" />
+          <BrandLogo
+            priority
+            className="h-auto w-[140px] object-contain object-left md:w-[170px]"
+          />
           <nav className="flex items-center gap-3 text-sm">
             <Link
               href={`${appUrl}/login`}
@@ -32,27 +35,31 @@ export default function HomePage() {
           </nav>
         </header>
 
-        <section className="flex flex-1 flex-col justify-center gap-8 py-16 md:max-w-2xl md:py-24">
-          <h1 className="sr-only">{brand.name}</h1>
-          <p className="brand-title text-4xl leading-tight tracking-tight text-[var(--foreground)] md:text-6xl">
-            Habits that feel quiet, not loud.
+        <section className="flex flex-1 flex-col justify-center gap-6 py-16 md:max-w-2xl md:py-24">
+          <h1 className="brand-title text-5xl leading-none tracking-tight text-[var(--foreground)] md:text-7xl">
+            {brand.name}
+          </h1>
+          <p className="text-xl font-medium leading-snug text-[var(--foreground)] md:text-2xl">
+            A calm habit tracker for daily rituals, honest streaks, and quiet
+            reflection.
           </p>
           <p className="max-w-md text-base leading-relaxed text-[var(--muted)] md:text-lg">
-            Track daily rituals, keep streaks honest, and reflect without the noise.
-            Built for your phone-first day.
+            Alavo helps you build consistent habits on your phone — log what you
+            did today, keep streaks without noise, and reflect in a simple
+            journal. Sign in with email or Google to start free.
           </p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
               href={`${appUrl}/signup`}
               className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--primary)] px-6 text-base font-medium text-white transition hover:opacity-90"
             >
-              Start free
+              Start free with Alavo
             </Link>
             <Link
               href={`${appUrl}/login`}
               className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white/60 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
             >
-              I already have an account
+              Sign in
             </Link>
           </div>
         </section>

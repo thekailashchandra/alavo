@@ -14,14 +14,39 @@ const literata = Literata({
 
 export const metadata: Metadata = {
   title: {
-    default: "Alavo",
+    default: "Alavo — calm habit tracker",
     template: "%s · Alavo",
   },
-  description: "A calm habit tracker for streaks, reflection, and consistency.",
+  description:
+    "Alavo is a calm habit tracker for daily rituals, honest streaks, and quiet reflection. Track habits on your phone and stay consistent without noise.",
   applicationName: "Alavo",
+  keywords: [
+    "Alavo",
+    "habit tracker",
+    "habits",
+    "streaks",
+    "daily habits",
+    "journal",
+  ],
+  authors: [{ name: "Alavo", url: "https://alavo.cc" }],
+  openGraph: {
+    title: "Alavo — calm habit tracker",
+    description:
+      "Alavo helps you build consistent habits — log daily rituals, keep streaks, and reflect without the noise.",
+    url: "https://alavo.cc",
+    siteName: "Alavo",
+    type: "website",
+  },
   icons: {
     icon: [{ url: "/Logo.png", type: "image/png" }],
   },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? {
+        verification: {
+          google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+        },
+      }
+    : {}),
 };
 
 export const viewport: Viewport = {
