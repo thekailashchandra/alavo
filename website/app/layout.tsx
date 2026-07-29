@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Literata, Outfit } from "next/font/google";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -63,6 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.variable} ${literata.variable} antialiased`}>
+        <GoogleAnalytics />
         {children}
       </body>
     </html>
