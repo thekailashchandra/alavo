@@ -1,12 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand-logo";
 import { useAuth } from "@/components/providers/auth-provider";
 import { authClient } from "@/lib/auth/client";
+import { getTimezone } from "@/lib/api-client";
+import { sendSignupVerificationOtp } from "@/lib/auth/verification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +22,19 @@ function VerifyEmailContent() {
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
+  const autoSent = useRef(false);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
   }, [emailParam]);
+
+  // Auto-send OTP once when landing here after signup
+  useEffect(() => {
+    const target = (emailParam || email).trim().toLowerCase();
+    if (!target || autoSent.current) return;
+    autoSent.current = true;
+    void sendSignupVerificationOtp(target).catch(() => null);
+  }, [emailParam, email]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +55,14 @@ function VerifyEmailContent() {
       });
       if (error) throw new Error(error.message || "Invalid or expired code");
 
+      // Sync local user as verified + timezone
+      await fetch("/api/auth/bootstrap", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timezone: getTimezone() }),
+      }).catch(() => null);
+
       await refresh();
       toast.success("Email verified");
       router.replace("/today");
@@ -61,30 +80,12 @@ function VerifyEmailContent() {
     }
     setResending(true);
     try {
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
-        email: email.trim().toLowerCase(),
-        type: "email-verification",
-      });
-      if (error) throw new Error(error.message || "Could not resend");
+      await sendSignupVerificationOtp(email);
       toast.success("Verification code sent — check inbox and spam.");
     } catch (error) {
-      // Fallback to generic sendVerificationEmail if OTP endpoint unavailable
-      try {
-        const { error } = await authClient.sendVerificationEmail({
-          email: email.trim().toLowerCase(),
-          callbackURL: window.location.origin + "/today",
-        });
-        if (error) throw new Error(error.message || "Could not resend");
-        toast.success("Verification email sent — check inbox and spam.");
-      } catch (fallbackError) {
-        toast.error(
-          fallbackError instanceof Error
-            ? fallbackError.message
-            : error instanceof Error
-              ? error.message
-              : "Could not resend"
-        );
-      }
+      toast.error(
+        error instanceof Error ? error.message : "Could not resend"
+      );
     } finally {
       setResending(false);
     }
@@ -105,7 +106,7 @@ function VerifyEmailContent() {
               to <span className="font-medium text-foreground">{email}</span>
             </>
           ) : null}
-          . Check spam if you don&apos;t see it.
+          . Your account isn&apos;t active until this step is done.
         </p>
       </div>
 
@@ -152,9 +153,9 @@ function VerifyEmailContent() {
           {resending ? "Sending…" : "Resend code"}
         </Button>
         <p className="text-xs text-muted-foreground">
-          Codes are sent by Neon Auth (not this page). Check spam for mail from
-          Alavo or auth@mail.myneon.app. If nothing arrives, set Custom SMTP to
-          Gmail in Neon Console → Auth.
+          Check spam for mail from Alavo. If nothing arrives, set Custom SMTP
+          (Gmail) in Neon Console → Auth, and turn on Verify at Sign-up with
+          Verification code.
         </p>
       </div>
 

@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand-logo";
 import { useAuth } from "@/components/providers/auth-provider";
+import { sendSignupVerificationOtp } from "@/lib/auth/verification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,8 +45,13 @@ export default function LoginPage() {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to sign in";
-      if (/verify|unverified|email.*not.*verif/i.test(message)) {
-        toast.error("Verify your email first");
+      if (/verify|unverified|email.*not.*verif|EMAIL_NOT_VERIFIED/i.test(message)) {
+        toast.error("Verify your email first — we sent a new code");
+        try {
+          await sendSignupVerificationOtp(email);
+        } catch {
+          // ignore — verify page can resend
+        }
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         return;
       }

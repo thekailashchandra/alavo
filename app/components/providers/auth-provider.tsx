@@ -76,12 +76,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       const timezone = getTimezone();
-      const { error } = await authClient.signIn.email({
+      const { data, error } = await authClient.signIn.email({
         email,
         password,
       });
       if (error) {
         throw new Error(error.message || "Failed to sign in");
+      }
+
+      const neonVerified = Boolean(
+        data?.user?.emailVerified ?? data?.session?.user?.emailVerified
+      );
+      if (!neonVerified) {
+        try {
+          await authClient.signOut();
+        } catch {
+          // ignore
+        }
+        setUser(null);
+        throw new Error("Please verify your email before signing in");
       }
 
       // Sync local app user + timezone after Neon session cookies are set
@@ -95,6 +108,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await loadMe();
       if (!me) throw new Error("Signed in but could not load profile");
       if (!me.emailVerified) {
+        try {
+          await authClient.signOut();
+        } catch {
+          // ignore
+        }
+        setUser(null);
         throw new Error("Please verify your email before signing in");
       }
     },
@@ -103,9 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(
     async (email: string, password: string) => {
-      const timezone = getTimezone();
       const name = email.split("@")[0] || "Alavo user";
-      const { error } = await authClient.signUp.email({
+      const { data, error } = await authClient.signUp.email({
         email,
         password,
         name,
@@ -114,20 +132,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message || "Failed to create account");
       }
 
-      // Ensure local app user row exists
-      await fetch("/api/auth/bootstrap", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timezone }),
-      }).catch(() => null);
+      if (data?.user?.emailVerified) {
+        await fetch("/api/auth/bootstrap", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timezone: getTimezone() }),
+        }).catch(() => null);
+        await loadMe();
+        return {
+          needsVerification: false,
+          message: "Account created.",
+        };
+      }
+
+      try {
+        await authClient.signOut();
+      } catch {
+        // ignore
+      }
+      setUser(null);
 
       return {
         needsVerification: true,
         message: "Account created. Check your email to verify, then sign in.",
       };
     },
-    []
+    [loadMe]
   );
 
   const logout = useCallback(async () => {

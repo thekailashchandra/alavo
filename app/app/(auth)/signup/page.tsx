@@ -1,31 +1,103 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { signUpAction, type AuthActionState } from "@/lib/auth/actions";
+import { authClient } from "@/lib/auth/client";
 import { getTimezone } from "@/lib/api-client";
+import {
+  finalizePendingVerification,
+  isDuplicateAccountError,
+} from "@/lib/auth/verification";
+import { passwordSchema } from "@/lib/validations";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function SignupPage() {
-  const [timezone, setTimezone] = useState("UTC");
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [state, formAction, pending] = useActionState<AuthActionState, FormData>(
-    signUpAction,
-    null
-  );
 
   useEffect(() => {
-    setTimezone(getTimezone());
+    // Prefetch timezone so we can pass it after verification
+    void getTimezone();
   }, []);
 
-  useEffect(() => {
-    if (state?.error) toast.error(state.error);
-  }, [state]);
+  const goToVerify = (email: string, message: string) => {
+    toast.success(message);
+    router.replace(`/verify-email?email=${encodeURIComponent(email)}`);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const name = String(form.get("name") || "").trim();
+    const email = String(form.get("email") || "")
+      .trim()
+      .toLowerCase();
+    const password = String(form.get("password") || "");
+
+    if (!email) {
+      toast.error("Email is required");
+      return;
+    }
+
+    const passwordCheck = passwordSchema.safeParse(password);
+    if (!passwordCheck.success) {
+      toast.error(passwordCheck.error.issues[0]?.message || "Invalid password");
+      return;
+    }
+
+    setPending(true);
+    try {
+      const { data, error } = await authClient.signUp.email({
+        email,
+        password,
+        name: name || email.split("@")[0] || "Alavo user",
+      });
+
+      if (error) {
+        const message = error.message || "Failed to create account";
+        // Account already created earlier without finishing OTP — continue verify
+        if (isDuplicateAccountError(message)) {
+          await finalizePendingVerification(email);
+          goToVerify(
+            email,
+            "This email already has an account. Enter the verification code we sent (or resend it)."
+          );
+          return;
+        }
+        throw new Error(message);
+      }
+
+      const verified = Boolean(data?.user?.emailVerified);
+      if (verified) {
+        await fetch("/api/auth/bootstrap", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timezone: getTimezone() }),
+        }).catch(() => null);
+        toast.success("Account created");
+        router.replace("/today");
+        return;
+      }
+
+      // Do not leave an unverified session active — OTP must complete first
+      await finalizePendingVerification(email);
+      goToVerify(email, "Check your email for a 6-digit code to finish signup.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create account"
+      );
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="phone-shell flex min-h-[100dvh] flex-col px-6 py-10">
@@ -36,8 +108,10 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <form action={formAction} className="flex flex-1 flex-col gap-5">
-        <input type="hidden" name="timezone" value={timezone} />
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="flex flex-1 flex-col gap-5"
+      >
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
           <Input

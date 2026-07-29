@@ -51,10 +51,26 @@ async function ensureAppUser(sessionUser: {
   });
 
   if (existing) {
+    // Keep local verification in sync with Neon Auth
     if (verifiedAt && !existing.emailVerified) {
       return prisma.user.update({
         where: { id: existing.id },
         data: { emailVerified: verifiedAt },
+        select: {
+          id: true,
+          email: true,
+          emailVerified: true,
+          timezone: true,
+          provider: true,
+          createdAt: true,
+          notificationSettings: true,
+        },
+      });
+    }
+    if (!verifiedAt && existing.emailVerified) {
+      return prisma.user.update({
+        where: { id: existing.id },
+        data: { emailVerified: null },
         select: {
           id: true,
           email: true,

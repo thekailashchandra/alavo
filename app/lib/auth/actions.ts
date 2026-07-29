@@ -33,14 +33,34 @@ export async function signUpAction(
       return { error: passwordCheck.error.issues[0]?.message || "Invalid password" };
     }
 
-    const { error } = await auth.signUp.email({
+    const { data, error } = await auth.signUp.email({
       email,
       password,
       name,
     });
 
     if (error) {
-      return { error: error.message || "Failed to create account" };
+      const message = error.message || "Failed to create account";
+      // Unverified account already exists — continue on verify page
+      if (/already|exist|registered|taken/i.test(message)) {
+        try {
+          await auth.signOut();
+        } catch {
+          // ignore
+        }
+        redirect("/verify-email?email=" + encodeURIComponent(email));
+      }
+      return { error: message };
+    }
+
+    // Never treat signup as complete until email OTP is verified
+    if (!data?.user?.emailVerified) {
+      try {
+        await auth.signOut();
+      } catch {
+        // ignore
+      }
+      redirect("/verify-email?email=" + encodeURIComponent(email));
     }
 
     await prisma.user.upsert({
@@ -50,11 +70,12 @@ export async function signUpAction(
         timezone,
         passwordHash: null,
         provider: "EMAIL",
+        emailVerified: new Date(),
       },
-      update: { timezone },
+      update: { timezone, emailVerified: new Date() },
     });
 
-    redirect("/verify-email?email=" + encodeURIComponent(email));
+    redirect("/today");
   } catch (error) {
     if (
       error &&
