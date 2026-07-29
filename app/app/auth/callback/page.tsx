@@ -19,7 +19,7 @@ function AuthCallbackContent() {
     (async () => {
       try {
         const { data, error } = await authClient.getSession();
-        if (error || !data?.session?.user?.email) {
+        if (error || !data?.user?.email) {
           throw new Error(error?.message || "Sign-in did not complete");
         }
 

@@ -84,9 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message || "Failed to sign in");
       }
 
-      const neonVerified = Boolean(
-        data?.user?.emailVerified ?? data?.session?.user?.emailVerified
-      );
+      const neonVerified = Boolean(data?.user?.emailVerified);
       if (!neonVerified) {
         try {
           await authClient.signOut();
