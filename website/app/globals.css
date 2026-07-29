@@ -30,3 +30,31 @@ body {
 .brand-title {
   font-family: var(--font-literata), Georgia, serif;
 }
+
+.legal-body h2 {
+  margin-top: 2rem;
+  font-family: var(--font-literata), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.legal-body ul {
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.legal-body li + li {
+  margin-top: 0.4rem;
+}
+
+.legal-body a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-body a:hover {
+  opacity: 0.85;
+}
