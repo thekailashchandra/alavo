@@ -30,11 +30,7 @@ function AuthCallbackContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             timezone: getTimezone(),
-            // Local enum currently has EMAIL | GOOGLE; map social → GOOGLE
-            provider:
-              providerParam === "google" || providerParam === "github"
-                ? "GOOGLE"
-                : undefined,
+            provider: providerParam === "google" ? "GOOGLE" : undefined,
           }),
         }).catch(() => null);
 
