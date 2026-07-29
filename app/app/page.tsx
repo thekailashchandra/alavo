@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Flame, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="phone-shell flex min-h-[100dvh] items-center justify-center">
+      <div className="phone-shell flex min-h-dvh items-center justify-center">
         <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
       </div>
     );
@@ -31,48 +31,51 @@ export default function HomePage() {
   }
 
   return (
-    <div className="phone-shell flex min-h-[100dvh] flex-col">
+    <div className="phone-shell flex min-h-dvh flex-col">
       <div className="flex flex-1 flex-col justify-between px-6 py-10">
-        <div className="space-y-8 pt-8">
+        <div className="space-y-6 pt-6">
+          <BrandLogo priority className="max-w-[180px]" />
           <div className="space-y-3">
-            <BrandLogo priority className="max-w-[240px]" />
-            <h1 className="sr-only">Alavo</h1>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1 text-xs text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Build habits that stick
-            </div>
-            <p className="max-w-sm text-base leading-relaxed text-muted-foreground">
-              A calm space to track daily habits, celebrate streaks, and reflect
-              on what matters — designed for your phone.
+            <h1 className="brand-title text-4xl font-semibold tracking-tight text-foreground">
+              Alavo
+            </h1>
+            <p className="text-lg font-medium leading-snug text-foreground">
+              Alavo is a habit tracking app for building daily routines, keeping
+              streaks, and reflecting in a simple journal.
             </p>
-          </div>
-
-          <div className="grid gap-3">
-            {[
-              "Check off today’s habits in seconds",
-              "See streaks and patterns at a glance",
-              "Journal wins, stress, and tomorrow’s focus",
-            ].map((text) => (
-              <div
-                key={text}
-                className="flex items-start gap-3 rounded-2xl border border-border bg-white/80 p-4"
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              With Alavo you can create habits, mark them complete each day,
+              track consistency, and write short reflections. When you continue
+              with Google, Alavo uses your Google account name and email only to
+              create and sign you into your Alavo account. We do not sell your
+              data. See our{" "}
+              <a
+                href="https://alavo.cc/privacy"
+                className="font-medium text-primary underline underline-offset-2"
               >
-                <Flame className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <p className="text-sm text-zinc-700">{text}</p>
-              </div>
-            ))}
+                Privacy Policy
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://alavo.cc/terms"
+                className="font-medium text-primary underline underline-offset-2"
+              >
+                Terms of Service
+              </a>
+              .
+            </p>
           </div>
         </div>
 
         <div className="space-y-3 pb-4">
           <Button asChild className="h-12 w-full text-base">
             <Link href="/signup">
-              Get started
+              Start free with Alavo
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-12 w-full text-base">
-            <Link href="/login">Sign in</Link>
+            <Link href="/login">Sign in to Alavo</Link>
           </Button>
         </div>
       </div>
