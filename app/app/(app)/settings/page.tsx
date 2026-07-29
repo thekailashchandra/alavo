@@ -355,50 +355,71 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="space-y-3 px-5">
+      <section className="space-y-3 px-5 pb-2">
         <Button variant="outline" className="w-full" onClick={() => void handleLogout()}>
           <LogOut className="h-4 w-4" />
           Sign out
         </Button>
+      </section>
 
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full">
-              <Trash2 className="h-4 w-4" />
-              Delete account
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-              <AlertDialogDescription>
-                All habits, logs, and journal entries will be permanently removed.
-                Type DELETE to confirm.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="delete-confirm">Type DELETE</Label>
-                <Input
-                  id="delete-confirm"
-                  value={deleteConfirm}
-                  onChange={(e) => setDeleteConfirm(e.target.value)}
-                  placeholder="DELETE"
-                />
-              </div>
+      {/* Keep destructive actions visually far from Sign out */}
+      <div className="min-h-28" aria-hidden />
+
+      <section className="mt-16 border-t border-dashed border-border/50 px-5 pb-12 pt-12">
+        <details className="group">
+          <summary className="cursor-pointer list-none text-center text-[11px] tracking-wide text-muted-foreground/80 underline-offset-2 hover:text-muted-foreground hover:underline [&::-webkit-details-marker]:hidden">
+            Advanced account options
+          </summary>
+          <div className="mt-10 space-y-3 rounded-2xl border border-red-200/70 bg-red-50/30 p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-red-800">Danger zone</p>
+              <p className="text-xs leading-relaxed text-red-700/75">
+                Permanently erase your account and all habit data. This cannot be undone.
+              </p>
             </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-red-600 hover:bg-red-700"
-                onClick={() => void handleDeleteAccount()}
-                disabled={deleting || deleteConfirm !== "DELETE"}
-              >
-                Delete forever
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full border-red-200 bg-white text-red-700 hover:bg-red-50 hover:text-red-800"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    All habits, logs, and journal entries will be permanently removed.
+                    Type DELETE to confirm.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="delete-confirm">Type DELETE</Label>
+                    <Input
+                      id="delete-confirm"
+                      value={deleteConfirm}
+                      onChange={(e) => setDeleteConfirm(e.target.value)}
+                      placeholder="DELETE"
+                    />
+                  </div>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => void handleDeleteAccount()}
+                    disabled={deleting || deleteConfirm !== "DELETE"}
+                  >
+                    Delete forever
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </details>
       </section>
     </div>
   );
