@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.9rem;
+  --background: #f4f4f5;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #5b6b9a;
+  --primary-foreground: #ffffff;
+  --secondary: #e8e8ea;
+  --secondary-foreground: #171717;
+  --muted: #ececef;
+  --muted-foreground: #6b6b73;
+  --accent: #e4e4e7;
+  --accent-foreground: #18181b;
+  --destructive: #ef4444;
+  --border: #d4d4d8;
+  --input: #d4d4d8;
+  --ring: #5b6b9a;
+  --status-success: #22c55e;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+  --status-neutral: #d1d5db;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-fraunces);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(91, 107, 154, 0.12), transparent 42%),
+    linear-gradient(180deg, #fafafa 0%, #ececef 100%);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.phone-shell {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: #ffffff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 480px) {
+  body {
+    padding: 24px 0;
+  }
+
+  .phone-shell {
+    min-height: calc(100dvh - 48px);
+    border-radius: 28px;
+    border: 1px solid #d4d4d8;
+  }
+}
+
+.brand-title {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.03em;
+}

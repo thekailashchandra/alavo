@@ -1,0 +1,24 @@
+{
+  "name": "Alavo",
+  "short_name": "Alavo",
+  "description": "Track habits, build streaks, reflect daily.",
+  "start_url": "/today",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5B6B9A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/Logo.png",
+      "sizes": "2049x1152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Logo.png",
+      "sizes": "2049x1152",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
