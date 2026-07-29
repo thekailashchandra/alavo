@@ -18,9 +18,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Generate Prisma Client
+        working-directory: app
         run: npx prisma generate
 
       - name: Lint
@@ -29,14 +30,21 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Build
+      - name: Build app
+        working-directory: app
         env:
-          DATABASE_URL: postgresql://user:pass@localhost:5432/habitflow?sslmode=require
+          DATABASE_URL: postgresql://user:pass@localhost:5432/alavo?sslmode=require
           NEON_AUTH_BASE_URL: https://example.neonauth.us-east-2.aws.neon.tech/neondb/auth
           NEON_AUTH_COOKIE_SECRET: ci_cookie_secret_at_least_32_chars_long_xx
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           VAPID_PUBLIC_KEY: BBjtfV3QSA78eHNE5x1TKU8-9g6Rb7xnFS5dnzWoAwgZ2EGLPKHU9uq3-VFjGcaW2nGNg-lHUgd1gxNiyAlrJoo
           VAPID_PRIVATE_KEY: Ccg0XFUEa9arXGd0sz9qnKCjPH1s8ao7Bamtw7OELbw
-          VAPID_SUBJECT_EMAIL: mailto:ci@habitflow.local
+          VAPID_SUBJECT_EMAIL: mailto:ci@alavo.local
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: BBjtfV3QSA78eHNE5x1TKU8-9g6Rb7xnFS5dnzWoAwgZ2EGLPKHU9uq3-VFjGcaW2nGNg-lHUgd1gxNiyAlrJoo
+        run: npm run build
+
+      - name: Build website
+        working-directory: website
+        env:
+          NEXT_PUBLIC_PRODUCT_URL: http://localhost:3000
         run: npm run build

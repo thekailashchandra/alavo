@@ -1,45 +1,42 @@
-# Alavo (Private)
+# Alavo (Private monorepo)
 
-Personal habit tracker Progressive Web App — **private project, not open source**.
+Personal habit tracker — **private project, not open source**.
 
-Do not publish this repository publicly or share secrets (`.env`, API keys, Neon credentials).
-
-## Features
-
-- Neon Auth (email/password) with app user sync
-- Customizable habits, Today checklist, streaks, heatmaps, analytics
-- Journal, PWA offline sync, Web Push scaffolding
-- Settings: export, notifications, delete account
-
-## Tech stack
-
-- Next.js 15 (App Router) + TypeScript
-- Tailwind CSS + shadcn/ui-style components
-- Neon Postgres + Prisma
-- Neon Auth (Managed Better Auth)
-- Recharts, Web Push, Resend (optional email)
+```
+alavo/
+├── website/     # Marketing site → alavo.cc (dev :3001)
+├── app/         # Product PWA     → app.alavo.cc (dev :3000)
+└── packages/
+    ├── brand/   # Logo + brand tokens
+    └── tsconfig/
+```
 
 ## Local setup
 
-1. Copy `.env.example` → `.env` and fill values (especially `DATABASE_URL`, `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`).
-2. `npm install`
-3. `npx prisma migrate dev`
-4. `npm run dev` → [http://localhost:3000](http://localhost:3000)
+1. `npm install --legacy-peer-deps`
+2. Copy `app/.env.example` → `app/.env` and fill Neon / Gmail / VAPID values.
+3. Optional website env: `website/.env.local` with `NEXT_PUBLIC_PRODUCT_URL=http://localhost:3000`
+4. `npm run db:migrate`
+5. Product: `npm run dev:app` → http://localhost:3000  
+   Marketing: `npm run dev:website` → http://localhost:3001
 
 ## Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm run start` | Production server |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript check |
-| `npm run db:migrate` | Prisma migrate |
-| `npm run db:studio` | Prisma Studio |
+| `npm run dev:app` | Product app (port 3000) |
+| `npm run dev:website` | Marketing site (port 3001) |
+| `npm run build` | Build all workspaces |
+| `npm run lint` / `typecheck` | Across workspaces |
+| `npm run db:migrate` | Prisma migrate (app) |
 
-## Deploy (private)
+## Domains
 
-- Frontend/API: Vercel (private project)
-- Database/Auth: Neon
-- Keep the GitHub repo **private** if you use one; never commit `.env`
+- `alavo.cc` → deploy `website/`
+- `app.alavo.cc` → deploy `app/`
+- Neon Auth trusted domains should include both origins (+ localhost for dev)
+
+## Deploy
+
+- Two Vercel projects from this repo (`website` and `app` roots)
+- Keep the GitHub repo **private**; never commit `.env`

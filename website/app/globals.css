@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "@alavo/brand/tokens.css";
+
+:root {
+  --background: var(--alavo-surface);
+  --foreground: var(--alavo-ink);
+  --primary: var(--alavo-primary);
+  --muted: var(--alavo-muted);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(91, 107, 154, 0.22), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(17, 17, 17, 0.06), transparent 50%),
+    linear-gradient(165deg, #f7f7f8 0%, #e8eaef 48%, #f3f1ec 100%);
+}
+
+.brand-title {
+  font-family: var(--font-literata), Georgia, serif;
+}
