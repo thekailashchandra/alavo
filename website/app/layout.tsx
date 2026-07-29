@@ -15,11 +15,11 @@ const literata = Literata({
 
 export const metadata: Metadata = {
   title: {
-    default: "Alavo — calm habit tracker",
+    default: "Alavo",
     template: "%s · Alavo",
   },
   description:
-    "Alavo is a calm habit tracker for daily rituals, honest streaks, and quiet reflection. Track habits on your phone and stay consistent without noise.",
+    "Alavo is a habit tracking app for building daily routines, keeping streaks, and reflecting in a simple journal.",
   applicationName: "Alavo",
   keywords: [
     "Alavo",
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Alavo", url: "https://alavo.cc" }],
   openGraph: {
-    title: "Alavo — calm habit tracker",
+    title: "Alavo",
     description:
-      "Alavo helps you build consistent habits — log daily rituals, keep streaks, and reflect without the noise.",
+      "Alavo is a habit tracking app for daily routines, streaks, and journaling.",
     url: "https://alavo.cc",
     siteName: "Alavo",
     type: "website",
