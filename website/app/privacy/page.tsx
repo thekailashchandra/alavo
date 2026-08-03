@@ -70,7 +70,7 @@ export default function PrivacyPage() {
         <li>Delete your account in Settings → Advanced account options</li>
         <li>
           Contact us at{" "}
-          <a href="mailto:alavoapp@gmail.com">alavoapp@gmail.com</a> for privacy
+          <a href="mailto:hi@alavo.cc">hi@alavo.cc</a> for privacy
           requests
         </li>
       </ul>
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
       <h2>Contact</h2>
       <p>
         Questions about privacy:{" "}
-        <a href="mailto:alavoapp@gmail.com">alavoapp@gmail.com</a>
+        <a href="mailto:hi@alavo.cc">hi@alavo.cc</a>
       </p>
     </SiteShell>
   );

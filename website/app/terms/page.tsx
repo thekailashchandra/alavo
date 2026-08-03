@@ -84,7 +84,7 @@ export default function TermsPage() {
       <h2>Contact</h2>
       <p>
         Questions about these Terms:{" "}
-        <a href="mailto:alavoapp@gmail.com">alavoapp@gmail.com</a>
+        <a href="mailto:hi@alavo.cc">hi@alavo.cc</a>
       </p>
     </SiteShell>
   );
