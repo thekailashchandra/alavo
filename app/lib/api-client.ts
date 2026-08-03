@@ -10,6 +10,13 @@ export type NotificationSettings = {
   };
   workoutTime?: string | null;
   journalingTime?: string | null;
+  emailReports?: {
+    daily: boolean;
+    weekly: boolean;
+    monthly: boolean;
+    /** Local hour 0–23 (default 20) */
+    sendHour: number;
+  };
 };
 
 export type User = {

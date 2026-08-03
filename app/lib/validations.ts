@@ -148,6 +148,14 @@ export const notificationSettingsSchema = z.object({
     .regex(/^([01]\d|2[0-3]):([0-5]\d)$/)
     .nullable()
     .optional(),
+  emailReports: z
+    .object({
+      daily: z.boolean().default(false),
+      weekly: z.boolean().default(true),
+      monthly: z.boolean().default(false),
+      sendHour: z.number().int().min(0).max(23).default(20),
+    })
+    .optional(),
 });
 
 export const deleteAccountSchema = z.object({

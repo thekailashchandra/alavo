@@ -7,6 +7,7 @@ import {
   Download,
   Droplets,
   LogOut,
+  Mail,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -41,6 +42,12 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   },
   workoutTime: null,
   journalingTime: "21:00",
+  emailReports: {
+    daily: false,
+    weekly: true,
+    monthly: false,
+    sendHour: 20,
+  },
 };
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -65,6 +72,42 @@ export default function SettingsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const [sendingReport, setSendingReport] = useState(false);
+
+  const updateEmailReport = (
+    key: "daily" | "weekly" | "monthly",
+    value: boolean
+  ) => {
+    const next = {
+      ...settings,
+      emailReports: {
+        daily: settings.emailReports?.daily ?? false,
+        weekly: settings.emailReports?.weekly ?? true,
+        monthly: settings.emailReports?.monthly ?? false,
+        sendHour: settings.emailReports?.sendHour ?? 20,
+        [key]: value,
+      },
+    };
+    void saveSettings(next);
+  };
+
+  const sendTestReport = async (period: "daily" | "weekly" | "monthly") => {
+    setSendingReport(true);
+    try {
+      const res = await fetchWithAuth("/api/cron/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ period }),
+      });
+      await parseJson(res);
+      toast.success(`${period[0].toUpperCase()}${period.slice(1)} report emailed`);
+    } catch {
+      toast.error("Could not send report — check Gmail settings");
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
   const loadPushStatus = useCallback(async () => {
     if (!("serviceWorker" in navigator)) return;
     try {
@@ -84,6 +127,10 @@ export default function SettingsPage() {
         waterReminder: {
           ...DEFAULT_SETTINGS.waterReminder!,
           ...(user.notificationSettings.waterReminder ?? {}),
+        },
+        emailReports: {
+          ...DEFAULT_SETTINGS.emailReports!,
+          ...(user.notificationSettings.emailReports ?? {}),
         },
       });
     }
@@ -337,6 +384,56 @@ export default function SettingsPage() {
             }
             onBlur={() => void saveSettings(settings)}
           />
+        </div>
+      </section>
+
+      <section className="space-y-4 px-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <Mail className="h-4 w-4 text-muted-foreground" />
+          Email reports
+        </h2>
+        <div className="space-y-4 rounded-2xl border border-border bg-white p-4">
+          <p className="text-xs text-muted-foreground">
+            Habit summaries emailed to {user?.email} around{" "}
+            {String(settings.emailReports?.sendHour ?? 20).padStart(2, "0")}:00
+            local time.
+          </p>
+          {(
+            [
+              ["daily", "Daily report", "Yesterday’s check-ins"],
+              ["weekly", "Weekly report", "Previous Mon–Sun"],
+              ["monthly", "Monthly report", "Previous calendar month"],
+            ] as const
+          ).map(([key, label, hint]) => (
+            <div
+              key={key}
+              className="flex items-center justify-between border-t border-border pt-4 first:border-t-0 first:pt-0"
+            >
+              <div>
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-xs text-muted-foreground">{hint}</p>
+              </div>
+              <Switch
+                checked={settings.emailReports?.[key] ?? false}
+                onCheckedChange={(v) => updateEmailReport(key, v)}
+                disabled={saving}
+              />
+            </div>
+          ))}
+          <div className="grid grid-cols-3 gap-2 border-t border-border pt-4">
+            {(["daily", "weekly", "monthly"] as const).map((period) => (
+              <Button
+                key={period}
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={sendingReport}
+                onClick={() => void sendTestReport(period)}
+              >
+                Send {period}
+              </Button>
+            ))}
+          </div>
         </div>
       </section>
 
