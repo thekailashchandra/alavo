@@ -1,47 +1,22 @@
 import nodemailer from "nodemailer";
 
 function getMailTransport() {
-  const smtpHost = process.env.SMTP_HOST?.trim();
-  const smtpUser = process.env.SMTP_USER?.trim() || process.env.GMAIL_USER?.trim();
-  const smtpPass =
-    process.env.SMTP_PASSWORD?.trim() || process.env.GMAIL_APP_PASSWORD?.trim();
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
 
-  if (!smtpUser || !smtpPass) return null;
+  if (!user || !pass) return null;
 
-  // Prefer explicit SMTP (Hostinger / custom domain mail)
-  if (smtpHost) {
-    const port = Number(process.env.SMTP_PORT || "465");
-    const secure =
-      process.env.SMTP_SECURE === "true" ||
-      process.env.SMTP_SECURE === "1" ||
-      port === 465;
-
-    return nodemailer.createTransport({
-      host: smtpHost,
-      port,
-      secure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
-  }
-
-  // Fallback: Gmail app password
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: smtpUser,
-      pass: smtpPass,
+      user,
+      pass,
     },
   });
 }
 
 export function getFromAddress() {
-  return (
-    process.env.EMAIL_FROM?.trim() ||
-    "Alavo <hi@alavo.cc>"
-  );
+  return process.env.EMAIL_FROM?.trim() || "Alavo <hi@alavo.cc>";
 }
 
 export async function sendMail(options: {
@@ -54,8 +29,7 @@ export async function sendMail(options: {
   if (!transporter) {
     return {
       ok: false,
-      error:
-        "Email is not configured (set SMTP_* for hi@alavo.cc or GMAIL_USER / GMAIL_APP_PASSWORD)",
+      error: "Gmail is not configured (GMAIL_USER / GMAIL_APP_PASSWORD)",
     };
   }
 
@@ -70,7 +44,7 @@ export async function sendMail(options: {
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Send failed";
-    console.warn("[Alavo] Email send failed:", message);
+    console.warn("[Alavo] Gmail send failed:", message);
     return { ok: false, error: message };
   }
 }
