@@ -9,6 +9,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { useAuth } from "@/components/providers/auth-provider";
 import { sendSignupVerificationOtp } from "@/lib/auth/verification";
+import { formatAuthError } from "@/lib/auth/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,8 +52,7 @@ export default function LoginPage() {
       toast.success("Signed in");
       router.replace("/today");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to sign in";
+      const message = formatAuthError(error, "Failed to sign in");
       if (/verify|unverified|email.*not.*verif|EMAIL_NOT_VERIFIED/i.test(message)) {
         toast.error("Verify your email first — we sent a new code");
         try {

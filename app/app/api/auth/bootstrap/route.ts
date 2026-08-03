@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       data: {
         timezone: data.timezone || user.timezone,
         ...(data.provider ? { provider: data.provider } : {}),
-        // OAuth providers mark email verified at Neon; mirror locally
+        // OAuth providers mark email verified at Supabase; mirror locally
         ...(data.provider === "GOOGLE" && !user.emailVerified
           ? { emailVerified: new Date() }
           : {}),

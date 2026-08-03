@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand-logo";
 import { useAuth } from "@/components/providers/auth-provider";
-import { authClient } from "@/lib/auth/client";
+import { createClient } from "@/lib/supabase/client";
 import { getTimezone } from "@/lib/api-client";
 import { sendSignupVerificationOtp } from "@/lib/auth/verification";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ function VerifyEmailContent() {
     if (emailParam) setEmail(emailParam);
   }, [emailParam]);
 
-  // Auto-send OTP once when landing here after signup
   useEffect(() => {
     const target = (emailParam || email).trim().toLowerCase();
     if (!target || autoSent.current) return;
@@ -49,13 +48,26 @@ function VerifyEmailContent() {
 
     setVerifying(true);
     try {
-      const { error } = await authClient.emailOtp.verifyEmail({
-        email: email.trim().toLowerCase(),
-        otp: code.trim(),
+      const supabase = createClient();
+      const normalized = email.trim().toLowerCase();
+      const token = code.trim();
+
+      let { error } = await supabase.auth.verifyOtp({
+        email: normalized,
+        token,
+        type: "signup",
       });
+
+      if (error) {
+        ({ error } = await supabase.auth.verifyOtp({
+          email: normalized,
+          token,
+          type: "email",
+        }));
+      }
+
       if (error) throw new Error(error.message || "Invalid or expired code");
 
-      // Sync local user as verified + timezone
       await fetch("/api/auth/bootstrap", {
         method: "POST",
         credentials: "include",
@@ -153,9 +165,8 @@ function VerifyEmailContent() {
           {resending ? "Sending…" : "Resend code"}
         </Button>
         <p className="text-xs text-muted-foreground">
-          Check spam for mail from Alavo. If nothing arrives, set Custom SMTP
-          (Gmail) in Neon Console → Auth, and turn on Verify at Sign-up with
-          Verification code.
+          Check spam for mail from Alavo. Confirmations are sent via Supabase
+          Auth (configure Custom SMTP with Gmail in the Supabase dashboard).
         </p>
       </div>
 

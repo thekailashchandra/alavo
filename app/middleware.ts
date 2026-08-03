@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { createMiddlewareClient } from "@/lib/supabase/middleware";
+import { NextResponse, type NextRequest } from "next/server";
 
 function allowedOrigins(): Set<string> {
   const origins = new Set<string>();
@@ -12,7 +12,6 @@ function allowedOrigins(): Set<string> {
     if (o) origins.add(o);
   }
 
-  // Common Alavo production hosts
   origins.add("https://app.alavo.cc");
   origins.add("https://alavo-app.vercel.app");
   origins.add("http://localhost:3000");
@@ -20,8 +19,24 @@ function allowedOrigins(): Set<string> {
   return origins;
 }
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  });
+
+  // Refresh Supabase session cookies
+  try {
+    if (
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      const supabase = createMiddlewareClient(request, response);
+      await supabase.auth.getUser();
+    }
+  } catch {
+    // Auth refresh failures shouldn't block the request
+  }
+
   const origin = request.headers.get("origin");
   const allowed = allowedOrigins();
   const requestOrigin = origin?.replace(/\/$/, "") ?? "";
@@ -40,7 +55,10 @@ export function middleware(request: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL ||
       "http://localhost:3000";
 
-    response.headers.set("Access-Control-Allow-Origin", allowOrigin.replace(/\/$/, ""));
+    response.headers.set(
+      "Access-Control-Allow-Origin",
+      allowOrigin.replace(/\/$/, "")
+    );
     response.headers.set("Access-Control-Allow-Credentials", "true");
     response.headers.set(
       "Access-Control-Allow-Methods",
@@ -60,5 +78,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

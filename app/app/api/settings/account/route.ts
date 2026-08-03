@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { auth } from "@/lib/auth/server";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
 
@@ -19,10 +20,23 @@ export async function DELETE(req: NextRequest) {
     const body = await req.json();
     deleteAccountSchema.parse(body);
 
+    const supabase = await createClient();
+    const { data: authData } = await supabase.auth.getUser();
+    const authUserId = authData.user?.id;
+
     await prisma.user.delete({ where: { id: user.id } });
 
+    if (authUserId) {
+      try {
+        const admin = createAdminClient();
+        await admin.auth.admin.deleteUser(authUserId);
+      } catch {
+        // App data already removed
+      }
+    }
+
     try {
-      await auth.signOut();
+      await supabase.auth.signOut();
     } catch {
       // local data already removed
     }

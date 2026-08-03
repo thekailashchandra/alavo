@@ -3,11 +3,11 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth/client";
+import { createClient } from "@/lib/supabase/client";
 import { getTimezone } from "@/lib/api-client";
 import { BrandLogo } from "@/components/brand-logo";
 
-function AuthCallbackContent() {
+function AuthCallbackCompleteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ran = useRef(false);
@@ -18,8 +18,9 @@ function AuthCallbackContent() {
 
     (async () => {
       try {
-        const { data, error } = await authClient.getSession();
-        if (error || !data?.user?.email) {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data.user?.email) {
           throw new Error(error?.message || "Sign-in did not complete");
         }
 
@@ -30,7 +31,11 @@ function AuthCallbackContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             timezone: getTimezone(),
-            provider: providerParam === "google" ? "GOOGLE" : undefined,
+            provider:
+              providerParam === "google" ||
+              data.user.app_metadata?.provider === "google"
+                ? "GOOGLE"
+                : undefined,
           }),
         }).catch(() => null);
 
@@ -56,7 +61,7 @@ function AuthCallbackContent() {
   );
 }
 
-export default function AuthCallbackPage() {
+export default function AuthCallbackCompletePage() {
   return (
     <Suspense
       fallback={
@@ -65,7 +70,7 @@ export default function AuthCallbackPage() {
         </div>
       }
     >
-      <AuthCallbackContent />
+      <AuthCallbackCompleteContent />
     </Suspense>
   );
 }

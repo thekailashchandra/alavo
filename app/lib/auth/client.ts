@@ -1,5 +1,3 @@
 "use client";
 
-import { createAuthClient } from "@neondatabase/auth/next";
-
-export const authClient = createAuthClient();
+export { createClient as createSupabaseBrowserClient } from "@/lib/supabase/client";

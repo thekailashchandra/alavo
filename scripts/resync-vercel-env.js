@@ -81,17 +81,20 @@ async function main() {
   const env = loadEnv(path.join("app", ".env"));
   const map = {
     DATABASE_URL: env.DATABASE_URL,
-    NEON_AUTH_BASE_URL: env.NEON_AUTH_BASE_URL,
-    NEON_AUTH_COOKIE_SECRET: env.NEON_AUTH_COOKIE_SECRET,
+    NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY,
     NEXT_PUBLIC_APP_URL: "https://app.alavo.cc",
+    CRON_SECRET: env.CRON_SECRET,
     ALLOWED_ORIGINS:
       "https://app.alavo.cc,https://alavo-app.vercel.app,https://alavo.cc,https://www.alavo.cc",
     GMAIL_USER: env.GMAIL_USER,
     GMAIL_APP_PASSWORD: env.GMAIL_APP_PASSWORD,
     EMAIL_FROM: env.EMAIL_FROM,
+    EMAIL_REPLY_TO: env.EMAIL_REPLY_TO,
     VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
     VAPID_PRIVATE_KEY: env.VAPID_PRIVATE_KEY,
-    VAPID_SUBJECT_EMAIL: env.VAPID_SUBJECT_EMAIL || "mailto:dev@alavo.local",
+    VAPID_SUBJECT_EMAIL: env.VAPID_SUBJECT_EMAIL || "mailto:hi@alavo.cc",
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
   };
 

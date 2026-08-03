@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/server";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export type AppUser = {
@@ -26,16 +26,18 @@ export function publicUser(user: AppUser) {
 async function ensureAppUser(sessionUser: {
   id: string;
   email: string;
-  emailVerified?: boolean | Date | null;
-  name?: string | null;
+  emailVerified?: boolean | Date | string | null;
+  appMetadata?: Record<string, unknown> | null;
 }): Promise<AppUser> {
   const email = sessionUser.email.toLowerCase();
   const verifiedAt =
     sessionUser.emailVerified === true
       ? new Date()
-      : sessionUser.emailVerified instanceof Date
-        ? sessionUser.emailVerified
-        : null;
+      : typeof sessionUser.emailVerified === "string"
+        ? new Date(sessionUser.emailVerified)
+        : sessionUser.emailVerified instanceof Date
+          ? sessionUser.emailVerified
+          : null;
 
   const existing = await prisma.user.findUnique({
     where: { email },
@@ -51,7 +53,6 @@ async function ensureAppUser(sessionUser: {
   });
 
   if (existing) {
-    // Keep local verification in sync with Neon Auth
     if (verifiedAt && !existing.emailVerified) {
       return prisma.user.update({
         where: { id: existing.id },
@@ -85,13 +86,16 @@ async function ensureAppUser(sessionUser: {
     return existing;
   }
 
+  const provider =
+    sessionUser.appMetadata?.provider === "google" ? "GOOGLE" : "EMAIL";
+
   return prisma.user.create({
     data: {
       id: sessionUser.id,
       email,
       emailVerified: verifiedAt,
       passwordHash: null,
-      provider: "EMAIL",
+      provider,
     },
     select: {
       id: true,
@@ -106,19 +110,25 @@ async function ensureAppUser(sessionUser: {
 }
 
 export async function getAuthUser(): Promise<AppUser | null> {
-  if (!process.env.NEON_AUTH_BASE_URL || !process.env.NEON_AUTH_COOKIE_SECRET) {
-    console.error("Neon Auth env vars are missing (NEON_AUTH_BASE_URL / NEON_AUTH_COOKIE_SECRET)");
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    console.error(
+      "Supabase env vars are missing (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)"
+    );
     return null;
   }
 
-  const { data: session } = await auth.getSession();
-  if (!session?.user?.email) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user?.email) return null;
 
   return ensureAppUser({
-    id: session.user.id,
-    email: session.user.email,
-    emailVerified: session.user.emailVerified,
-    name: session.user.name,
+    id: data.user.id,
+    email: data.user.email,
+    emailVerified: data.user.email_confirmed_at,
+    appMetadata: data.user.app_metadata as Record<string, unknown> | null,
   });
 }
 
@@ -133,7 +143,6 @@ export async function requireAuth(_req?: Request) {
   return { user, error: null as Response | null };
 }
 
-/** Kept for account deletion password confirmation via Neon Auth where available */
 export async function verifyPassword(_password: string, _hash: string) {
   return false;
 }

@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { authClient } from "@/lib/auth/client";
+import { createClient } from "@/lib/supabase/client";
 import { getTimezone, parseJson, type User } from "@/lib/api-client";
 import { signOutAction } from "@/lib/auth/actions";
 
@@ -60,7 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (res.status === 401) {
-        await authClient.getSession();
+        const supabase = createClient();
+        await supabase.auth.getSession();
         res = await fetch(input, {
           ...init,
           headers,
@@ -76,7 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       const timezone = getTimezone();
-      const { data, error } = await authClient.signIn.email({
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -84,18 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message || "Failed to sign in");
       }
 
-      const neonVerified = Boolean(data?.user?.emailVerified);
-      if (!neonVerified) {
-        try {
-          await authClient.signOut();
-        } catch {
-          // ignore
-        }
+      if (!data.user?.email_confirmed_at) {
+        await supabase.auth.signOut();
         setUser(null);
         throw new Error("Please verify your email before signing in");
       }
 
-      // Sync local app user + timezone after Neon session cookies are set
       await fetch("/api/auth/bootstrap", {
         method: "POST",
         credentials: "include",
@@ -106,11 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await loadMe();
       if (!me) throw new Error("Signed in but could not load profile");
       if (!me.emailVerified) {
-        try {
-          await authClient.signOut();
-        } catch {
-          // ignore
-        }
+        await supabase.auth.signOut();
         setUser(null);
         throw new Error("Please verify your email before signing in");
       }
@@ -120,17 +112,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(
     async (email: string, password: string) => {
+      const supabase = createClient();
       const name = email.split("@")[0] || "Alavo user";
-      const { data, error } = await authClient.signUp.email({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        name,
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) {
         throw new Error(error.message || "Failed to create account");
       }
 
-      if (data?.user?.emailVerified) {
+      if (data.user?.email_confirmed_at && data.session) {
         await fetch("/api/auth/bootstrap", {
           method: "POST",
           credentials: "include",
@@ -145,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        await authClient.signOut();
+        await supabase.auth.signOut();
       } catch {
         // ignore
       }
@@ -163,7 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signOutAction();
     } catch {
-      await authClient.signOut();
+      const supabase = createClient();
+      await supabase.auth.signOut();
       setUser(null);
     }
   }, []);
