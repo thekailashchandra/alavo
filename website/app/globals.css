@@ -27,13 +27,14 @@ body {
     linear-gradient(165deg, #f7f7f8 0%, #e8eaef 48%, #f3f1ec 100%);
 }
 
+/* Sans headings for a modern app feel (matches logo/UI) */
 .brand-title {
-  font-family: var(--font-literata), Georgia, serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
 }
 
 .legal-body h2 {
   margin-top: 2rem;
-  font-family: var(--font-literata), Georgia, serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -57,4 +58,44 @@ body {
 
 .legal-body a:hover {
   opacity: 0.85;
+}
+
+/* Landing page motion — respect reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-copy {
+    animation: fade-up 0.7s ease-out both;
+  }
+
+  .hero-visual {
+    animation: fade-up 0.85s ease-out 0.12s both;
+  }
+
+  .hero-mockup {
+    animation: float-soft 6s ease-in-out 1s infinite;
+  }
+
+  .feature-card {
+    animation: fade-up 0.65s ease-out both;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }

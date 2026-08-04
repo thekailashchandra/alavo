@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { BrandLogo } from "@alavo/brand";
+import { ClosingCta } from "@/components/home/closing-cta";
+import { FeaturesSection } from "@/components/home/features";
+import { HeroMockup } from "@/components/home/hero-mockup";
+import { ProofStrip } from "@/components/home/proof-strip";
+import { TrustBadge } from "@/components/home/trust-badge";
 
 const appUrl = (
   process.env.NEXT_PUBLIC_PRODUCT_URL || "https://app.alavo.cc"
@@ -13,19 +18,14 @@ export default function HomePage() {
         className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-[0.35] mix-blend-multiply"
       />
 
-      <div className="relative mx-auto flex min-h-dvh max-w-5xl flex-col px-6 py-8 md:px-10">
+      <div className="relative mx-auto flex min-h-dvh max-w-5xl flex-col px-6 py-6 md:px-10 md:py-8">
+        {/* Nav — unchanged structure */}
         <header className="flex items-center justify-between gap-4">
           <BrandLogo
             priority
             className="h-auto w-[140px] object-contain object-left md:w-[170px]"
           />
           <nav className="flex items-center gap-3 text-sm">
-            <Link
-              href="/privacy"
-              className="hidden text-[var(--muted)] transition hover:text-[var(--foreground)] sm:inline"
-            >
-              Privacy
-            </Link>
             <Link
               href={`${appUrl}/login`}
               className="text-[var(--muted)] transition hover:text-[var(--foreground)]"
@@ -41,57 +41,58 @@ export default function HomePage() {
           </nav>
         </header>
 
-        <section className="flex flex-1 flex-col justify-center gap-6 py-16 md:max-w-2xl md:py-24">
-          <h1 className="brand-title text-5xl leading-none tracking-tight text-[var(--foreground)] md:text-7xl">
-            Alavo
-          </h1>
-          <p className="text-xl font-medium leading-snug text-[var(--foreground)] md:text-2xl">
-            Alavo is a habit tracking app for building daily routines, keeping
-            streaks, and reflecting in a simple journal.
-          </p>
-          <p className="max-w-lg text-base leading-relaxed text-[var(--muted)] md:text-lg">
-            With Alavo you can create habits, mark them complete each day, track
-            consistency over time, and write short reflections. When you choose
-            Continue with Google, Alavo uses your Google account name and email
-            only to create and sign you into your Alavo account — we do not sell
-            your data. Read our{" "}
-            <Link href="/privacy" className="text-[var(--primary)] underline underline-offset-2">
-              Privacy Policy
-            </Link>{" "}
-            and{" "}
-            <Link href="/terms" className="text-[var(--primary)] underline underline-offset-2">
-              Terms of Service
-            </Link>
-            .
-          </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Link
-              href={`${appUrl}/signup`}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--primary)] px-6 text-base font-medium text-white transition hover:opacity-90"
-            >
-              Start free with Alavo
-            </Link>
-            <Link
-              href={`${appUrl}/login`}
-              className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white/60 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
-            >
-              Sign in to Alavo
-            </Link>
+        {/* Hero: two columns on desktop, stacked on mobile */}
+        <section className="grid flex-1 items-center gap-10 py-10 md:grid-cols-2 md:gap-12 md:py-12 lg:gap-16">
+          <div className="hero-copy flex flex-col gap-5 md:max-w-xl">
+            <h1 className="brand-title text-5xl font-semibold leading-none tracking-tight text-[var(--foreground)] md:text-6xl lg:text-7xl">
+              Alavo
+            </h1>
+            <h2 className="text-2xl font-semibold leading-snug tracking-tight text-[var(--foreground)] md:text-3xl">
+              Build habits that actually stick
+            </h2>
+            <p className="max-w-lg text-base leading-relaxed text-[var(--muted)] md:text-lg">
+              Track daily routines, keep streaks, and reflect in a simple
+              journal—without the clutter. Create an account and start free.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                href={`${appUrl}/signup`}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--primary)] px-6 text-base font-medium text-white transition hover:opacity-90"
+              >
+                Start free with Alavo
+              </Link>
+              <Link
+                href={`${appUrl}/login`}
+                className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white/60 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
+              >
+                Sign in to Alavo
+              </Link>
+            </div>
+
+            <TrustBadge />
+          </div>
+
+          <div className="hero-visual md:justify-self-end">
+            <HeroMockup />
           </div>
         </section>
-
-        <footer className="flex flex-wrap items-center gap-x-4 gap-y-2 pb-4 text-sm text-[var(--muted)]">
-          <span>
-            © {new Date().getFullYear()} Alavo
-          </span>
-          <Link href="/privacy" className="hover:text-[var(--foreground)]">
-            Privacy
-          </Link>
-          <Link href="/terms" className="hover:text-[var(--foreground)]">
-            Terms
-          </Link>
-        </footer>
       </div>
+
+      <ProofStrip />
+      <FeaturesSection />
+      <ClosingCta />
+
+      {/* Footer — keep links and copyright as-is */}
+      <footer className="relative mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-6 pb-8 pt-2 text-sm text-[var(--muted)] md:px-10">
+        <span>© {new Date().getFullYear()} Alavo</span>
+        <Link href="/privacy" className="hover:text-[var(--foreground)]">
+          Privacy
+        </Link>
+        <Link href="/terms" className="hover:text-[var(--foreground)]">
+          Terms
+        </Link>
+      </footer>
     </main>
   );
 }

@@ -1,15 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Literata, Outfit } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { GoogleAnalytics } from "@/components/google-analytics";
 import "./globals.css";
 
 const outfit = Outfit({
   variable: "--font-outfit",
-  subsets: ["latin"],
-});
-
-const literata = Literata({
-  variable: "--font-literata",
   subsets: ["latin"],
 });
 
@@ -19,7 +14,7 @@ export const metadata: Metadata = {
     template: "%s · Alavo",
   },
   description:
-    "Alavo is a habit tracking app for building daily routines, keeping streaks, and reflecting in a simple journal.",
+    "Build habits that actually stick. Track daily routines, keep streaks, and reflect in a simple journal with Alavo.",
   applicationName: "Alavo",
   keywords: [
     "Alavo",
@@ -33,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Alavo",
     description:
-      "Alavo is a habit tracking app for daily routines, streaks, and journaling.",
+      "Build habits that actually stick — daily routines, streaks, and a simple journal.",
     url: "https://alavo.cc",
     siteName: "Alavo",
     type: "website",
@@ -63,7 +58,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${outfit.variable} ${literata.variable} antialiased`}>
+      <body className={`${outfit.variable} antialiased`}>
         <GoogleAnalytics />
         {children}
       </body>
