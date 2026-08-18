@@ -1,5 +1,5 @@
 {
-  "extends": "@alavo/tsconfig/nextjs.json",
+  "extends": "../packages/tsconfig/nextjs.json",
   "compilerOptions": {
     "plugins": [{ "name": "next" }],
     "paths": {
