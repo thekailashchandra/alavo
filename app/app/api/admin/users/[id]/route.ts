@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { applyPaidSku, setUserFree } from "@/lib/billing/apply-purchase";
 import { isSku } from "@/lib/billing/entitlements";
 import { getEntitlementSnapshot } from "@/lib/billing/access";
+import { notifySubscription } from "@/lib/billing/notify";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -33,6 +34,15 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     } else {
       if (!body.sku || !isSku(body.sku)) return jsonError("Choose a plan or add-on", 400);
       await applyPaidSku(target.id, body.sku);
+      await notifySubscription({
+        userId: target.id,
+        userEmail: target.email,
+        sku: body.sku,
+        amountPaise: 0,
+        source: "admin",
+      }).catch((error) => {
+        console.warn("[Alavo] Admin grant notify failed:", error);
+      });
     }
 
     await audit({

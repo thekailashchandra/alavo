@@ -14,6 +14,7 @@ import {
 import { discountedAmountPaise, grantSkuForCoupon } from "@/lib/billing/coupons";
 import { loadRedeemableCoupon, recordCouponRedemption } from "@/lib/billing/redeem";
 import { getEntitlementSnapshot } from "@/lib/billing/access";
+import { notifySubscription } from "@/lib/billing/notify";
 
 const checkoutSchema = z.object({
   sku: z.enum(BILLING_SKUS as unknown as [BillingSku, ...BillingSku[]]),
@@ -67,6 +68,16 @@ export async function POST(req: NextRequest) {
           userId: user!.id,
         });
       }
+      await notifySubscription({
+        userId: user!.id,
+        userEmail: user!.email,
+        sku: grantNow,
+        amountPaise: 0,
+        couponCode: couponCode?.trim().toUpperCase() ?? null,
+        source: "coupon",
+      }).catch((error) => {
+        console.warn("[Alavo] Coupon grant notify failed:", error);
+      });
       return jsonOk({
         url: `${appUrl}/settings/subscription?paid=1&sku=${grantNow}`,
         granted: true,
@@ -82,6 +93,15 @@ export async function POST(req: NextRequest) {
       if (couponId) {
         await recordCouponRedemption({ couponId, userId: user!.id });
       }
+      await notifySubscription({
+        userId: user!.id,
+        userEmail: user!.email,
+        sku,
+        amountPaise: 0,
+        source: "dev",
+      }).catch((error) => {
+        console.warn("[Alavo] Dev unlock notify failed:", error);
+      });
       return jsonOk({
         url: `${appUrl}/settings/subscription?paid=1&sku=${sku}&dev=1`,
         dev: true,

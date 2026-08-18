@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { trialWindow } from "@/lib/billing/entitlements";
 import { isSuperAdminEmail } from "@/lib/admin-emails";
+import {
+  RegistrationClosedError,
+  isRegistrationClosed,
+} from "@/lib/auth/registration";
 
 export type AppUser = {
   id: string;
@@ -85,6 +89,10 @@ async function ensureAppUser(sessionUser: {
     return existing;
   }
 
+  if (isRegistrationClosed()) {
+    throw new RegistrationClosedError();
+  }
+
   const provider =
     sessionUser.appMetadata?.provider === "google" ? "GOOGLE" : "EMAIL";
 
@@ -139,12 +147,26 @@ export async function getAuthUser(): Promise<AppUser | null> {
     return null;
   }
 
-  const user = await ensureAppUser({
-    id: data.user.id,
-    email: data.user.email,
-    emailVerified: data.user.email_confirmed_at,
-    appMetadata: data.user.app_metadata as Record<string, unknown> | null,
-  });
+  let user: AppUser;
+  try {
+    user = await ensureAppUser({
+      id: data.user.id,
+      email: data.user.email,
+      emailVerified: data.user.email_confirmed_at,
+      appMetadata: data.user.app_metadata as Record<string, unknown> | null,
+    });
+  } catch (caught) {
+    authMemo = null;
+    if (caught instanceof RegistrationClosedError) {
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // Best-effort cleanup for blocked new sign-ups.
+      }
+      return null;
+    }
+    throw caught;
+  }
 
   if (memoKey) {
     authMemo = {

@@ -10,6 +10,7 @@ import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { useAuth } from "@/components/providers/auth-provider";
 import { sendSignupVerificationOtp } from "@/lib/auth/verification";
 import { formatAuthError } from "@/lib/auth/errors";
+import { isRegistrationClosedClient } from "@/lib/auth/registration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,9 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("error") === "oauth") {
       toast.error("Social sign-in failed. Try again or use email.");
+    }
+    if (params.get("error") === "registration_closed") {
+      toast.error("New sign-ups are temporarily paused.");
     }
   }, []);
 
@@ -128,10 +132,16 @@ export default function LoginPage() {
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">
-          New here?{" "}
-          <Link href="/signup" className="font-medium text-primary hover:underline">
-            Create an account
-          </Link>
+          {isRegistrationClosedClient() ? (
+            <>New sign-ups are temporarily paused.</>
+          ) : (
+            <>
+              New here?{" "}
+              <Link href="/signup" className="font-medium text-primary hover:underline">
+                Create an account
+              </Link>
+            </>
+          )}
         </p>
         </form>
       </div>

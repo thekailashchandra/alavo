@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { useAuth } from "@/components/providers/auth-provider";
+import { isRegistrationClosedClient } from "@/lib/auth/registration";
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
@@ -68,15 +69,28 @@ export default function HomePage() {
         </div>
 
         <div className="space-y-3 pb-4">
-          <Button asChild className="h-12 w-full text-base">
-            <Link href="/signup">
-              Start free with Alavo
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="h-12 w-full text-base">
-            <Link href="/login">Sign in to Alavo</Link>
-          </Button>
+          {isRegistrationClosedClient() ? (
+            <>
+              <p className="text-center text-sm text-muted-foreground">
+                New sign-ups are temporarily paused.
+              </p>
+              <Button asChild className="h-12 w-full text-base">
+                <Link href="/login">Sign in to Alavo</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild className="h-12 w-full text-base">
+                <Link href="/signup">
+                  Start free with Alavo
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="h-12 w-full text-base">
+                <Link href="/login">Sign in to Alavo</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

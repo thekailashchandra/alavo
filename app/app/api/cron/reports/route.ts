@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { runScheduledReports, sendReportToUser } from "@/lib/reports/send";
+import { sendPlanValidityReminders } from "@/lib/billing/reminders";
 import { requireAuth } from "@/lib/auth";
 
 const bodySchema = z.object({
@@ -16,9 +17,14 @@ function authorizeCron(req: NextRequest) {
   const header = req.headers.get("authorization");
   if (header === `Bearer ${secret}`) return true;
   if (req.headers.get("x-cron-secret") === secret) return true;
-  // Vercel Cron sends this automatically when CRON_SECRET is set
   const vercelAuth = req.headers.get("authorization");
   return vercelAuth === `Bearer ${secret}`;
+}
+
+async function runBillingAndReports() {
+  const summary = await runScheduledReports();
+  const reminders = await sendPlanValidityReminders();
+  return { ok: true as const, ...summary, reminders };
 }
 
 export async function GET(req: NextRequest) {
@@ -26,8 +32,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const summary = await runScheduledReports();
-  return NextResponse.json({ ok: true, ...summary });
+  return NextResponse.json(await runBillingAndReports());
 }
 
 export async function POST(req: NextRequest) {
@@ -35,11 +40,9 @@ export async function POST(req: NextRequest) {
   const isCron = authorizeCron(req);
 
   if (isCron && !body.force && !body.userId && !body.period) {
-    const summary = await runScheduledReports();
-    return NextResponse.json({ ok: true, ...summary });
+    return NextResponse.json(await runBillingAndReports());
   }
 
-  // Authenticated user sending themselves a test / forced report
   if (!isCron) {
     const { user, error } = await requireAuth(req);
     if (error || !user) return error!;
@@ -54,12 +57,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, period, email: result.email });
   }
 
-  // Cron + force specific user/period
   if (body.userId && body.period) {
     const result = await sendReportToUser(body.userId, body.period);
     return NextResponse.json(result);
   }
 
-  const summary = await runScheduledReports();
-  return NextResponse.json({ ok: true, ...summary });
+  return NextResponse.json(await runBillingAndReports());
 }

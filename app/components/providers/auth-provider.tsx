@@ -15,6 +15,10 @@ import { getTimezone, parseJson, type User } from "@/lib/api-client";
 import { signOutAction } from "@/lib/auth/actions";
 import { cacheKeys, invalidateCache, readCache, writeCache } from "@/lib/client-cache";
 import { clearLocalAppData } from "@/lib/compliance/consent";
+import {
+  REGISTRATION_CLOSED_MESSAGE,
+  isRegistrationClosedClient,
+} from "@/lib/auth/registration";
 
 type AuthContextValue = {
   user: User | null;
@@ -144,6 +148,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(
     async (email: string, password: string) => {
+      if (isRegistrationClosedClient()) {
+        throw new Error(REGISTRATION_CLOSED_MESSAGE);
+      }
       const supabase = createClient();
       const name = email.split("@")[0] || "Alavo user";
       const { data, error } = await supabase.auth.signUp({

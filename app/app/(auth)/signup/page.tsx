@@ -13,8 +13,13 @@ import {
   isDuplicateAccountError,
 } from "@/lib/auth/verification";
 import { formatAuthError } from "@/lib/auth/errors";
+import {
+  REGISTRATION_CLOSED_MESSAGE,
+  isRegistrationClosedClient,
+} from "@/lib/auth/registration";
 import { passwordSchema } from "@/lib/validations";
 import { BrandLogo } from "@/components/brand-logo";
+import { RegistrationClosedNotice } from "@/components/auth/registration-closed-notice";
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +45,7 @@ async function recordSignupConsent() {
 
 export default function SignupPage() {
   const router = useRouter();
+  const registrationClosed = isRegistrationClosedClient();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -58,6 +64,10 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (registrationClosed) {
+      toast.error(REGISTRATION_CLOSED_MESSAGE);
+      return;
+    }
     if (!consentReady) {
       toast.error("Please confirm your age and accept the Terms and Privacy Policy");
       return;
@@ -107,12 +117,17 @@ export default function SignupPage() {
       }
 
       if (data.user?.email_confirmed_at && data.session) {
-        await fetch("/api/auth/bootstrap", {
+        const bootstrap = await fetch("/api/auth/bootstrap", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ timezone: getTimezone() }),
-        }).catch(() => null);
+        });
+        if (bootstrap.status === 403) {
+          toast.error(REGISTRATION_CLOSED_MESSAGE);
+          await supabase.auth.signOut();
+          return;
+        }
         await recordSignupConsent();
         toast.success("Account created");
         router.replace("/today");
@@ -127,6 +142,28 @@ export default function SignupPage() {
       setPending(false);
     }
   };
+
+  if (registrationClosed) {
+    return (
+      <div className="phone-shell flex min-h-[100dvh] flex-col px-6 py-10">
+        <div className="mb-10 space-y-3 pt-4">
+          <BrandLogo priority className="max-w-[180px]" />
+          <p className="text-sm text-muted-foreground">
+            Alavo is not accepting new accounts right now.
+          </p>
+        </div>
+        <div className="flex flex-1 flex-col gap-5">
+          <RegistrationClosedNotice />
+          <p className="text-center text-sm text-muted-foreground">
+            Need help?{" "}
+            <a href="mailto:hi@alavo.cc" className="font-medium text-primary hover:underline">
+              hi@alavo.cc
+            </a>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="phone-shell flex min-h-[100dvh] flex-col px-6 py-10">
