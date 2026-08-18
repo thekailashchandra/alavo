@@ -20,6 +20,12 @@ export function SiteFooter() {
           <Link href="/terms" className="transition hover:text-[var(--foreground)]">
             Terms
           </Link>
+          <Link href="/refund" className="transition hover:text-[var(--foreground)]">
+            Refund Policy
+          </Link>
+          <Link href="/contact" className="transition hover:text-[var(--foreground)]">
+            Contact
+          </Link>
           <Link href="/about" className="transition hover:text-[var(--foreground)]">
             About
           </Link>

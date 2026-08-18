@@ -131,7 +131,9 @@ export default function TermsPage() {
       <p>
         Because digital access is granted immediately after successful payment,
         fees are generally non-refundable except where required by the Consumer
-        Protection Act, 2019 or Razorpay’s dispute process. Contact{" "}
+        Protection Act, 2019 or Razorpay's dispute process. See our{" "}
+        <a href="/refund">Refund &amp; Cancellation Policy</a> for timelines
+        and eligible cases. Contact{" "}
         <a href={`mailto:${LEGAL.supportEmail}`}>{LEGAL.supportEmail}</a> for
         billing issues.
       </p>
