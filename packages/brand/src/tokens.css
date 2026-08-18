@@ -1,12 +1,24 @@
 :root {
   --alavo-primary: #7b08e0;
   --alavo-primary-foreground: #ffffff;
-  --alavo-ink: #34364d;
-  --alavo-muted: #707394;
-  --alavo-surface: #fcf9fd;
-  --alavo-surface-deep: #f8f2ff;
   --alavo-primary-80: #a137fd;
   --alavo-primary-120: #510594;
+  --alavo-primary-30: #eeddfe;
+  --alavo-primary-20: #f8f2ff;
+  --alavo-primary-10: #fcf9fd;
+  --alavo-ink: #34364d;
+  --alavo-muted: #707394;
+  --alavo-gray-80: #707394;
   --alavo-gray-60: #a2a6c9;
+  --alavo-gray-30: #ced1ed;
   --alavo-gray-20: #e6e7f6;
+  --alavo-gray-10: #f2f3fc;
+  --alavo-surface: #fcf9fd;
+  --alavo-surface-deep: #f8f2ff;
+  --brand-gradient: linear-gradient(
+    135deg,
+    var(--alavo-primary-80) 0%,
+    var(--alavo-primary) 50%,
+    var(--alavo-primary-120) 100%
+  );
 }

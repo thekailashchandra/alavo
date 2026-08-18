@@ -88,7 +88,7 @@ function cycle(list: number[], current: number, direction: 1 | -1) {
   return list[(safeIdx + direction + list.length) % list.length]!;
 }
 
-function TimeStepper({
+function CompactTimeStepper({
   value,
   onChange,
 }: {
@@ -110,71 +110,74 @@ function TimeStepper({
     onChange(toHHmm(next.hour12, next.minute, next.period));
   };
 
+  const stepBtn =
+    "flex h-6 w-7 items-center justify-center rounded-md text-gray-60 hover:bg-gray-10 hover:text-primary-100";
+
   return (
-    <div className="space-y-4">
-      <p className="text-center text-3xl font-semibold tracking-tight tabular-nums text-zinc-900">
+    <div className="space-y-2">
+      <p className="text-center text-sm font-semibold tabular-nums text-gray-100">
         {formatDisplay(value || "07:00")}
       </p>
 
-      <div className="flex items-center justify-center gap-4">
-        <div className="flex flex-col items-center gap-1">
+      <div className="flex items-center justify-center gap-1.5">
+        <div className="flex flex-col items-center">
           <button
             type="button"
             aria-label="Increase hour"
             onClick={() => setPart({ hour12: cycle(HOURS_12, parsed.hour12, 1) })}
-            className="flex h-8 w-10 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+            className={stepBtn}
           >
-            <ChevronUp className="h-5 w-5" />
+            <ChevronUp className="h-3.5 w-3.5" />
           </button>
-          <span className="text-2xl font-semibold tabular-nums text-zinc-900">
+          <span className="w-7 text-center text-base font-semibold tabular-nums text-gray-100">
             {parsed.hour12}
           </span>
           <button
             type="button"
             aria-label="Decrease hour"
             onClick={() => setPart({ hour12: cycle(HOURS_12, parsed.hour12, -1) })}
-            className="flex h-8 w-10 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+            className={stepBtn}
           >
-            <ChevronDown className="h-5 w-5" />
+            <ChevronDown className="h-3.5 w-3.5" />
           </button>
         </div>
 
-        <span className="pb-1 text-2xl font-semibold text-zinc-300">:</span>
+        <span className="pb-0.5 text-base font-semibold text-gray-30">:</span>
 
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center">
           <button
             type="button"
             aria-label="Increase minutes"
             onClick={() => setPart({ minute: cycle(MINUTES, minute, 1) })}
-            className="flex h-8 w-10 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+            className={stepBtn}
           >
-            <ChevronUp className="h-5 w-5" />
+            <ChevronUp className="h-3.5 w-3.5" />
           </button>
-          <span className="text-2xl font-semibold tabular-nums text-zinc-900">
+          <span className="w-7 text-center text-base font-semibold tabular-nums text-gray-100">
             {pad(minute)}
           </span>
           <button
             type="button"
             aria-label="Decrease minutes"
             onClick={() => setPart({ minute: cycle(MINUTES, minute, -1) })}
-            className="flex h-8 w-10 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+            className={stepBtn}
           >
-            <ChevronDown className="h-5 w-5" />
+            <ChevronDown className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-[220px] grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1">
         {(["AM", "PM"] as const).map((period) => (
           <button
             key={period}
             type="button"
             onClick={() => setPart({ period })}
             className={cn(
-              "h-10 rounded-full text-sm font-semibold transition",
+              "h-7 rounded-md text-[11px] font-semibold transition",
               parsed.period === period
-                ? "bg-primary text-white"
-                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+                ? "bg-primary-100 text-white"
+                : "bg-gray-10 text-gray-60 hover:text-primary-100"
             )}
           >
             {period}
@@ -213,42 +216,36 @@ export function TimeSchedulePicker({ value, onChange }: TimeSchedulePickerProps)
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-primary" />
-          <p className="text-sm font-semibold text-zinc-900">Schedule</p>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 text-primary-100" />
+          <p className="text-sm font-semibold text-gray-100">Schedule</p>
         </div>
-        <p className="mt-1 text-xs text-zinc-500">
-          Set start and end — duration updates automatically
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-5">
-        <p className="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-400">
-          Start time
-        </p>
-        <TimeStepper value={start} onChange={setStart} />
-      </div>
-
-      <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-5">
-        <p className="mb-3 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-400">
-          End time
-        </p>
-        <TimeStepper value={end} onChange={setEnd} />
-      </div>
-
-      <div className="rounded-2xl bg-zinc-100 px-4 py-3 text-center">
-        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-400">
-          Duration
-        </p>
-        <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-900">
+        <span className="rounded-full bg-primary-20 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-primary-100">
           {formatDuration(duration)}
-        </p>
-        <p className="mt-0.5 text-xs text-zinc-500">
-          {formatDisplay(start)} → {formatDisplay(end)}
-        </p>
+        </span>
       </div>
+
+      <div className="grid grid-cols-2 gap-2 rounded-xl border border-gray-20 bg-white p-2.5">
+        <div className="rounded-lg bg-gray-10/60 p-2">
+          <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-60">
+            Start
+          </p>
+          <CompactTimeStepper value={start} onChange={setStart} />
+        </div>
+
+        <div className="rounded-lg bg-gray-10/60 p-2">
+          <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-60">
+            End
+          </p>
+          <CompactTimeStepper value={end} onChange={setEnd} />
+        </div>
+      </div>
+
+      <p className="text-center text-xs text-gray-60">
+        {formatDisplay(start)} → {formatDisplay(end)}
+      </p>
     </div>
   );
 }

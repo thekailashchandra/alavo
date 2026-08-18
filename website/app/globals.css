@@ -2,7 +2,7 @@
 @import "@alavo/brand/tokens.css";
 
 :root {
-  --background: var(--alavo-surface);
+  --background: var(--alavo-primary-10);
   --foreground: var(--alavo-ink);
   --primary: var(--alavo-primary);
   --muted: var(--alavo-muted);
@@ -21,15 +21,80 @@ body {
   margin: 0;
   color: var(--foreground);
   font-family: var(--font-outfit), system-ui, sans-serif;
-  background:
-    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(123, 8, 224, 0.14), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(161, 55, 253, 0.1), transparent 50%),
-    linear-gradient(165deg, #fcf9fd 0%, #f8f2ff 48%, #fcf9fd 100%);
+  background-color: var(--alavo-primary-10);
+  background-image:
+    radial-gradient(ellipse 80% 55% at 0% -5%, rgba(123, 8, 224, 0.16), transparent 58%),
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(161, 55, 253, 0.12), transparent 52%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(238, 221, 254, 0.55), transparent 60%);
 }
 
-/* Sans headings for a modern app feel (matches logo/UI) */
 .brand-title {
   font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+.text-gradient {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--brand-gradient);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 10px 28px -12px rgba(123, 8, 224, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px -12px rgba(123, 8, 224, 0.6);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--alavo-gray-20);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--foreground);
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: white;
+  border-color: var(--alavo-primary-30);
+}
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  border: 1px solid var(--alavo-primary-30);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--alavo-primary);
+}
+
+.surface-card {
+  border: 1px solid var(--alavo-gray-20);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 50px -36px rgba(52, 54, 77, 0.22);
 }
 
 .legal-body h2 {
@@ -60,7 +125,6 @@ body {
   opacity: 0.85;
 }
 
-/* Landing page motion — respect reduced motion */
 @media (prefers-reduced-motion: no-preference) {
   .hero-copy {
     animation: fade-up 0.7s ease-out both;
@@ -74,7 +138,9 @@ body {
     animation: float-soft 6s ease-in-out 1s infinite;
   }
 
-  .feature-card {
+  .feature-card,
+  .step-card,
+  .highlight-card {
     animation: fade-up 0.65s ease-out both;
   }
 }

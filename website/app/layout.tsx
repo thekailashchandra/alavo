@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: "%s · Alavo",
   },
   description:
-    "Build habits that actually stick. Track daily routines, keep streaks, and reflect in a simple journal with Alavo.",
+    "Build habits that actually stick. Alavo is a purple-themed habit tracker with week rings, streaks, analytics, and a simple journal.",
   applicationName: "Alavo",
   keywords: [
     "Alavo",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Alavo",
     description:
-      "Build habits that actually stick — daily routines, streaks, and a simple journal.",
+      "Build habits that actually stick — week rings, streaks, analytics, and a calm purple UI.",
     url: "https://alavo.cc",
     siteName: "Alavo",
     type: "website",

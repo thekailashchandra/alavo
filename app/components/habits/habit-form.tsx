@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { Bell, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,14 +14,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { HABIT_ICON_NAMES, getHabitIcon } from "@/lib/icons";
 import type { CreateHabitInput, Habit, HabitSubtask, UpdateHabitInput } from "@/lib/api-client";
 import {
   TimeSchedulePicker,
   type TimeScheduleValue,
 } from "@/components/habits/time-schedule-picker";
 
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+const FREQUENCY_OPTIONS = [
+  { value: "DAILY", label: "Daily", description: "Repeat every day" },
+  { value: "WEEKDAYS", label: "Custom", description: "Choose specific days" },
+  { value: "TIMES_PER_WEEK", label: "Weekly", description: "Set a weekly target" },
+] as const;
 
 type HabitFormProps = {
   open: boolean;
@@ -103,14 +108,12 @@ function habitToForm(habit?: Habit | null): FormState {
 
 export function HabitForm({ open, onOpenChange, habit, initialDraft, onSubmit }: HabitFormProps) {
   const [form, setForm] = useState<FormState>(() => habitToForm(habit));
-  const [iconTrayOpen, setIconTrayOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
       if (habit) setForm(habitToForm(habit));
       else if (initialDraft) setForm(draftToForm(initialDraft));
       else setForm(habitToForm(null));
-      setIconTrayOpen(false);
     }
   }, [open, habit, initialDraft]);
 
@@ -152,7 +155,7 @@ export function HabitForm({ open, onOpenChange, habit, initialDraft, onSubmit }:
         <DialogHeader>
           <DialogTitle>{habit ? "Edit habit" : "New habit"}</DialogTitle>
           <DialogDescription>
-            Set a name, icon, and schedule. You can change these anytime.
+            Set a name and schedule. You can change these anytime.
           </DialogDescription>
         </DialogHeader>
 
@@ -169,136 +172,107 @@ export function HabitForm({ open, onOpenChange, habit, initialDraft, onSubmit }:
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Icon</Label>
-            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-              <button
-                type="button"
-                onClick={() => setIconTrayOpen((v) => !v)}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-zinc-50"
-                aria-expanded={iconTrayOpen}
-              >
-                {(() => {
-                  const SelectedIcon = getHabitIcon(form.icon);
-                  return (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <SelectedIcon className="h-5 w-5" />
-                    </div>
-                  );
-                })()}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-zinc-900">{form.icon}</p>
-                  <p className="text-xs text-zinc-500">
-                    {iconTrayOpen ? "Choose an icon" : "Tap to open icon tray"}
-                  </p>
-                </div>
-                <ChevronDown
-                  className={cn(
-                    "h-4 w-4 text-zinc-400 transition-transform",
-                    iconTrayOpen && "rotate-180"
-                  )}
-                />
-              </button>
-
-              {iconTrayOpen && (
-                <div className="border-t border-zinc-200 bg-zinc-100 p-2.5">
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {HABIT_ICON_NAMES.map((iconName) => {
-                      const Icon = getHabitIcon(iconName);
-                      const selected = form.icon === iconName;
-                      return (
-                        <button
-                          key={iconName}
-                          type="button"
-                          onClick={() => {
-                            setForm((p) => ({ ...p, icon: iconName }));
-                            setIconTrayOpen(false);
-                          }}
-                          className={cn(
-                            "flex h-10 items-center justify-center rounded-xl transition-colors",
-                            selected
-                              ? "bg-white text-primary shadow-sm ring-1 ring-primary/30"
-                              : "bg-white/60 text-zinc-500 hover:bg-white hover:text-zinc-700"
-                          )}
-                          aria-label={iconName}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Frequency</Label>
-            <div className="grid grid-cols-1 gap-2">
-              {(
-                [
-                  ["DAILY", "Every day"],
-                  ["WEEKDAYS", "Specific days"],
-                  ["TIMES_PER_WEEK", "Times per week"],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() =>
-                    setForm((p) => ({ ...p, frequencyType: value }))
-                  }
-                  className={cn(
-                    "rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
-                    form.frequencyType === value
-                      ? "border-primary bg-primary/5 text-foreground"
-                      : "border-border hover:bg-muted"
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {form.frequencyType === "WEEKDAYS" && (
-            <div className="flex flex-wrap gap-2">
-              {WEEKDAY_LABELS.map((label, index) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => toggleWeekday(index)}
-                  className={cn(
-                    "h-9 min-w-9 rounded-lg border px-2 text-xs font-medium",
-                    form.weekdays.includes(index)
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-zinc-500"
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {form.frequencyType === "TIMES_PER_WEEK" && (
-            <div className="space-y-2">
-              <Label htmlFor="times-per-week">Target per week</Label>
-              <Input
-                id="times-per-week"
-                type="number"
-                min={1}
-                max={7}
-                value={form.timesPerWeek}
-                onChange={(e) =>
-                  setForm((p) => ({
-                    ...p,
-                    timesPerWeek: Number(e.target.value),
-                  }))
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <Label>Frequency</Label>
+              <span className="text-xs text-muted-foreground">
+                {
+                  FREQUENCY_OPTIONS.find((option) => option.value === form.frequencyType)
+                    ?.description
                 }
-              />
+              </span>
             </div>
-          )}
+
+            <div className="grid grid-cols-3 gap-1 rounded-xl bg-gray-10 p-1 ring-1 ring-gray-20">
+              {FREQUENCY_OPTIONS.map(({ value, label }) => {
+                const active = form.frequencyType === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() =>
+                      setForm((p) => ({ ...p, frequencyType: value }))
+                    }
+                    className={cn(
+                      "rounded-lg px-2 py-2 text-xs font-semibold transition",
+                      active
+                        ? "bg-white text-primary-100 shadow-sm"
+                        : "text-gray-60 hover:text-primary-100"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {form.frequencyType === "WEEKDAYS" && (
+              <div className="rounded-xl border border-gray-20 bg-primary-10/40 p-3">
+                <p className="mb-2 text-xs font-medium text-gray-80">On these days</p>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {WEEKDAY_LABELS.map((label, index) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => toggleWeekday(index)}
+                      className={cn(
+                        "h-9 rounded-lg text-xs font-semibold transition",
+                        form.weekdays.includes(index)
+                          ? "bg-primary-100 text-white shadow-sm shadow-primary-100/25"
+                          : "bg-white text-gray-60 ring-1 ring-gray-20 hover:text-primary-100"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {form.frequencyType === "TIMES_PER_WEEK" && (
+              <div className="flex items-center justify-between rounded-xl border border-gray-20 bg-primary-10/40 px-3 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-100">Weekly target</p>
+                  <p className="text-xs text-gray-60">Times to complete each week</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg"
+                    onClick={() =>
+                      setForm((p) => ({
+                        ...p,
+                        timesPerWeek: Math.max(1, p.timesPerWeek - 1),
+                      }))
+                    }
+                    aria-label="Decrease weekly target"
+                  >
+                    −
+                  </Button>
+                  <span className="min-w-8 text-center text-sm font-semibold tabular-nums text-gray-100">
+                    {form.timesPerWeek}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg"
+                    onClick={() =>
+                      setForm((p) => ({
+                        ...p,
+                        timesPerWeek: Math.min(7, p.timesPerWeek + 1),
+                      }))
+                    }
+                    aria-label="Increase weekly target"
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <TimeSchedulePicker
             value={form.schedule}
