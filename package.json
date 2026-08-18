@@ -17,6 +17,7 @@
     "build:website": "npm run build --workspace=@alavo/website",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspace=@alavo/app --if-present",
     "db:migrate": "npm run db:migrate --workspace=@alavo/app",
     "db:deploy": "npm run db:deploy --workspace=@alavo/app",
     "db:studio": "npm run db:studio --workspace=@alavo/app"

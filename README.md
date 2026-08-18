@@ -40,3 +40,5 @@ alavo/
 
 - Two Vercel projects from this repo (`website` and `app` roots)
 - Keep the GitHub repo **private**; never commit `.env`
+- **Pre-deploy checklist:** see [`PRE-DEPLOY.md`](./PRE-DEPLOY.md)
+- **Deploy guide:** see [`DEPLOY.md`](./DEPLOY.md)

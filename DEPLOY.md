@@ -26,6 +26,7 @@ Copy from `app/.env`. Required:
 
 ```
 DATABASE_URL=
+DIRECT_URL=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
@@ -84,10 +85,31 @@ After adding domains in Vercel, use the records Vercel shows. Usually:
 
 ## Neon Auth (after deploy)
 
-Neon Console → Auth:
-- Application name: **Alavo**
-- Trusted domains: `https://alavo.cc`, `https://app.alavo.cc`
-- Custom SMTP: Gmail (`smtp.gmail.com`, port 465)
+Supabase Dashboard → Authentication → URL Configuration:
+- Site URL: `https://app.alavo.cc`
+- Redirect URLs: `https://app.alavo.cc/auth/callback`, `http://localhost:3000/auth/callback`
+- Trusted domains: `alavo.cc`, `app.alavo.cc`
+
+Supabase → Auth → SMTP: Gmail (`smtp.gmail.com`, port 465) for signup OTP.
+
+---
+
+## Health checks (after deploy)
+
+| Service | Liveness | Readiness (DB) |
+|---------|----------|----------------|
+| App | `GET https://app.alavo.cc/api/health` | `GET https://app.alavo.cc/api/health?ready=1` |
+| Website | `GET https://alavo.cc/api/health` | — |
+
+Wire these to your uptime monitor (Better Uptime, UptimeRobot, etc.).
+
+---
+
+## Rollback
+
+1. **App or website (instant):** Vercel → project → Deployments → select previous green deployment → **Promote to Production**.
+2. **Database:** Migrations are forward-only. If a migration caused issues, restore from Supabase backup (Dashboard → Database → Backups) — do **not** run `migrate reset` on production.
+3. **Pre-deploy checklist:** See `PRE-DEPLOY.md`.
 
 ---
 

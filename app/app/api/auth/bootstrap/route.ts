@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getAuthUser, publicUser, USER_SELECT } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
+import { enforceRateLimit } from "@/lib/with-rate-limit";
 import { z } from "zod";
 
 const bootstrapSchema = z.object({
@@ -11,6 +12,9 @@ const bootstrapSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, "auth:bootstrap", 30, 60_000);
+    if (limited) return limited;
+
     const user = await getAuthUser();
     if (!user) {
       return jsonError("Unauthorized", 401);
