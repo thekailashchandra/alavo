@@ -1,89 +1,66 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { format, parseISO, startOfWeek } from "date-fns";
-import { Flame, Target, TrendingUp } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useMemo } from "react";
+import {
+  Award,
+  Flame,
+  Target,
+  Trophy,
+} from "lucide-react";
 import { Heatmap } from "@/components/analytics/heatmap";
-import { StatsCharts, type ChartDataPoint } from "@/components/analytics/stats-charts";
-import { Card, CardContent } from "@/components/ui/card";
-import { parseJson, type AnalyticsApiResponse } from "@/lib/api-client";
+import { HabitProgressList } from "@/components/analytics/habit-progress-list";
+import { StatsCharts } from "@/components/analytics/stats-charts";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useCachedQuery } from "@/hooks/use-cached-query";
+import { cacheKeys } from "@/lib/client-cache";
+import { type AnalyticsApiResponse } from "@/lib/api-client";
+import { getTodayInTimezone, rateToStatus } from "@/lib/habits";
 import { statusTextClass } from "@/lib/status";
-import { rateToStatus } from "@/lib/habits";
 
-function buildWeeklyChart(
-  overall: AnalyticsApiResponse["heatmaps"]["overall"]
-): ChartDataPoint[] {
-  const buckets = new Map<string, { due: number; done: number }>();
-
-  for (const day of overall) {
-    const weekStart = format(
-      startOfWeek(parseISO(day.date), { weekStartsOn: 1 }),
-      "yyyy-MM-dd"
-    );
-    const bucket = buckets.get(weekStart) ?? { due: 0, done: 0 };
-    bucket.due += day.due;
-    bucket.done += day.done;
-    buckets.set(weekStart, bucket);
-  }
-
-  return Array.from(buckets.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-8)
-    .map(([start, { due, done }]) => ({
-      label: format(parseISO(start), "MMM d"),
-      due,
-      done,
-      rate: due === 0 ? 0 : Math.round((done / due) * 100),
-    }));
-}
-
-function buildMonthlyChart(
-  overall: AnalyticsApiResponse["heatmaps"]["overall"]
-): ChartDataPoint[] {
-  const buckets = new Map<string, { due: number; done: number }>();
-
-  for (const day of overall) {
-    const monthKey = day.date.slice(0, 7);
-    const bucket = buckets.get(monthKey) ?? { due: 0, done: 0 };
-    bucket.due += day.due;
-    bucket.done += day.done;
-    buckets.set(monthKey, bucket);
-  }
-
-  return Array.from(buckets.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-6)
-    .map(([monthKey, { due, done }]) => ({
-      label: format(parseISO(`${monthKey}-01`), "MMM"),
-      due,
-      done,
-      rate: due === 0 ? 0 : Math.round((done / due) * 100),
-    }));
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  suffix,
+  accent = false,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string | number;
+  suffix?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-20 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-gray-60">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-20 text-primary-100">
+          <Icon className="h-4 w-4" />
+        </span>
+        <span className="text-xs">{label}</span>
+      </div>
+      <p
+        className={`mt-2 text-2xl font-bold tabular-nums ${
+          accent ? "text-primary-100" : "text-gray-100"
+        }`}
+      >
+        {value}
+        {suffix ? (
+          <span className="text-sm font-normal text-gray-60">{suffix}</span>
+        ) : null}
+      </p>
+    </div>
+  );
 }
 
 export default function AnalyticsPage() {
-  const { fetchWithAuth } = useAuth();
-  const [data, setData] = useState<AnalyticsApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const timezone = user?.timezone ?? "UTC";
+  const todayDate = getTodayInTimezone(timezone);
 
-  const loadAnalytics = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetchWithAuth("/api/analytics");
-      const json = await parseJson<AnalyticsApiResponse>(res);
-      setData(json);
-    } catch {
-      toast.error("Could not load analytics");
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchWithAuth]);
-
-  useEffect(() => {
-    void loadAnalytics();
-  }, [loadAnalytics]);
+  const { data, loading } = useCachedQuery<AnalyticsApiResponse>(
+    cacheKeys.analytics,
+    "/api/analytics"
+  );
 
   const heatmapCells = useMemo(
     () =>
@@ -92,16 +69,6 @@ export default function AnalyticsPage() {
         status: d.status,
         count: d.done,
       })),
-    [data]
-  );
-
-  const weeklyChart = useMemo(
-    () => buildWeeklyChart(data?.heatmaps.overall ?? []),
-    [data]
-  );
-
-  const monthlyChart = useMemo(
-    () => buildMonthlyChart(data?.heatmaps.overall ?? []),
     [data]
   );
 
@@ -115,97 +82,125 @@ export default function AnalyticsPage() {
     return streaks.reduce((max, s) => Math.max(max, s.current), 0);
   }, [data]);
 
-  const overallRate = data?.rates.monthly.rate ?? data?.overallCompletionPercent ?? 0;
-  const rateStatus = rateToStatus(overallRate);
+  const goalsCompleted = useMemo(
+    () => heatmapCells.filter((c) => c.status === "completed").length,
+    [heatmapCells]
+  );
+
+  const goalsMissed = useMemo(
+    () =>
+      heatmapCells.filter(
+        (c) => c.status === "missed_recent" || c.status === "missed_long"
+      ).length,
+    [heatmapCells]
+  );
+
+  const weeklyRate = data?.rates.weekly.rate ?? 0;
+  const monthlyRate = data?.rates.monthly.rate ?? 0;
+  const overallRate = data?.rates.overall?.rate ?? data?.overallCompletionPercent ?? 0;
+  const rateStatus = rateToStatus(monthlyRate);
 
   return (
     <div className="space-y-6 pb-6">
       <header className="px-5 pt-8">
-        <h1 className="brand-title text-2xl font-semibold tracking-tight">
+        <h1 className="brand-title text-2xl font-semibold tracking-tight text-gray-100">
           Analytics
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Patterns, streaks, and completion over time.
+        <p className="mt-1 text-sm text-gray-60/80">
+          Progress charts, streaks, and habit insights.
         </p>
       </header>
 
-      {loading ? (
+      {loading && !data ? (
         <div className="space-y-4 px-5">
-          <div className="h-24 animate-pulse rounded-2xl bg-muted" />
-          <div className="h-40 animate-pulse rounded-2xl bg-muted" />
-          <div className="h-48 animate-pulse rounded-2xl bg-muted" />
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
+            ))}
+          </div>
+          <div className="h-56 animate-pulse rounded-2xl bg-muted" />
+          <div className="h-56 animate-pulse rounded-2xl bg-muted" />
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 px-5">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Flame className="h-4 w-4" />
-                  <span className="text-xs">Current streak</span>
-                </div>
-                <p className="mt-2 text-2xl font-semibold">
-                  {currentStreak}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    d
-                  </span>
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-xs">Best streak</span>
-                </div>
-                <p className="mt-2 text-2xl font-semibold">
-                  {bestStreak}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    d
-                  </span>
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Target className="h-4 w-4" />
-                  <span className="text-xs">Active habits</span>
-                </div>
-                <p className="mt-2 text-2xl font-semibold">
-                  {data?.streaks.length ?? 0}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground">This month</p>
-                <p className={`mt-2 text-2xl font-semibold ${statusTextClass[rateStatus]}`}>
-                  {overallRate}%
-                </p>
-              </CardContent>
-            </Card>
+            <StatCard
+              icon={Trophy}
+              label="Longest streak ever"
+              value={bestStreak}
+              suffix="d"
+              accent
+            />
+            <StatCard
+              icon={Flame}
+              label="Current streak"
+              value={currentStreak}
+              suffix="d"
+              accent
+            />
+            <StatCard
+              icon={Target}
+              label="Goals completed"
+              value={goalsCompleted}
+            />
+            <StatCard
+              icon={Award}
+              label="Goals missed"
+              value={goalsMissed}
+            />
           </div>
 
           <div className="px-5">
-            <div className="rounded-2xl border border-border bg-white p-5">
-              <h2 className="mb-4 text-sm font-semibold">Activity</h2>
-              <Heatmap cells={heatmapCells} />
+            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-gray-20 bg-white p-3 shadow-sm">
+              <div className="text-center">
+                <p className="text-[10px] font-medium uppercase text-gray-60">Week</p>
+                <p className="text-lg font-bold text-primary-100">{weeklyRate}%</p>
+              </div>
+              <div className="border-x border-gray-10 text-center">
+                <p className="text-[10px] font-medium uppercase text-gray-60">Month</p>
+                <p className={`text-lg font-bold ${statusTextClass[rateStatus]}`}>
+                  {monthlyRate}%
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-medium uppercase text-gray-60">30 days</p>
+                <p className="text-lg font-bold text-primary-100">{overallRate}%</p>
+              </div>
             </div>
           </div>
 
           <div className="px-5">
-            <StatsCharts weekly={weeklyChart} monthly={monthlyChart} />
+            <StatsCharts overall={data?.heatmaps.overall ?? []} todayDate={todayDate} />
+          </div>
+
+          <div className="px-5">
+            <h2 className="mb-3 text-sm font-semibold text-gray-100">
+              Progress by habit
+            </h2>
+            <HabitProgressList
+              streaks={data?.streaks ?? []}
+              heatmaps={data?.heatmaps.byHabit ?? []}
+            />
+          </div>
+
+          <div className="px-5">
+            <div className="rounded-2xl border border-gray-20 bg-white p-5 shadow-sm">
+              <h2 className="mb-1 text-sm font-semibold text-gray-100">
+                Overall activity
+              </h2>
+              <p className="mb-4 text-xs text-gray-60">Combined habit completion heatmap</p>
+              <Heatmap cells={heatmapCells} />
+            </div>
           </div>
 
           {data?.bestDayOfWeek && (
             <div className="px-5">
-              <div className="rounded-2xl border border-border bg-white p-5">
-                <p className="text-sm text-muted-foreground">Best day</p>
-                <p className="mt-1 text-lg font-semibold">
+              <div className="rounded-2xl border border-gray-20 bg-white p-5 shadow-sm">
+                <p className="text-sm text-gray-60">Best day of week</p>
+                <p className="mt-1 text-lg font-semibold text-primary-100">
                   {data.bestDayOfWeek.dayName}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-60">
                   {data.bestDayOfWeek.completions} completions recorded
                 </p>
               </div>

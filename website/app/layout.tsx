@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
-import { GoogleAnalytics } from "@/components/google-analytics";
+import { CookieConsent } from "@/components/cookie-consent";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#5B6B9A",
+  themeColor: "#7B08E0",
   width: "device-width",
   initialScale: 1,
 };
@@ -59,7 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.variable} antialiased`}>
-        <GoogleAnalytics />
+        <CookieConsent />
         {children}
       </body>
     </html>

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { updateHabitSchema } from "@/lib/validations";
@@ -41,6 +42,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         }),
         ...(data.reminderEnabled !== undefined && {
           reminderEnabled: data.reminderEnabled,
+        }),
+        ...(data.subtasks !== undefined && {
+          subtasks: data.subtasks.length
+            ? data.subtasks
+            : Prisma.DbNull,
         }),
         ...(data.archived !== undefined && { archived: data.archived }),
         ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),

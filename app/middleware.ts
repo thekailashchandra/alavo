@@ -1,5 +1,5 @@
-import { createMiddlewareClient } from "@/lib/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
+import { createMiddlewareClient } from "@/lib/supabase/middleware";
 
 function allowedOrigins(): Set<string> {
   const origins = new Set<string>();
@@ -24,7 +24,9 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  // Refresh Supabase session cookies
+  const isApi = request.nextUrl.pathname.startsWith("/api");
+  if (!isApi) return response;
+
   try {
     if (
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -45,40 +47,36 @@ export async function middleware(request: NextRequest) {
     allowed.has(requestOrigin) ||
     /^https:\/\/alavo(-app)?-[a-z0-9-]+\.vercel\.app$/i.test(requestOrigin);
 
-  if (request.nextUrl.pathname.startsWith("/api")) {
-    if (origin && !isAllowed && process.env.NODE_ENV === "production") {
-      return NextResponse.json({ error: "CORS forbidden" }, { status: 403 });
-    }
+  if (origin && !isAllowed && process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "CORS forbidden" }, { status: 403 });
+  }
 
-    const allowOrigin =
-      (origin && isAllowed ? requestOrigin : null) ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      "http://localhost:3000";
+  const allowOrigin =
+    (origin && isAllowed ? requestOrigin : null) ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000";
 
-    response.headers.set(
-      "Access-Control-Allow-Origin",
-      allowOrigin.replace(/\/$/, "")
-    );
-    response.headers.set("Access-Control-Allow-Credentials", "true");
-    response.headers.set(
-      "Access-Control-Allow-Methods",
-      "GET,POST,PATCH,PUT,DELETE,OPTIONS"
-    );
-    response.headers.set(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
-    );
+  response.headers.set(
+    "Access-Control-Allow-Origin",
+    allowOrigin.replace(/\/$/, "")
+  );
+  response.headers.set("Access-Control-Allow-Credentials", "true");
+  response.headers.set(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PATCH,PUT,DELETE,OPTIONS"
+  );
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
 
-    if (request.method === "OPTIONS") {
-      return new NextResponse(null, { status: 204, headers: response.headers });
-    }
+  if (request.method === "OPTIONS") {
+    return new NextResponse(null, { status: 204, headers: response.headers });
   }
 
   return response;
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/api/:path*"],
 };

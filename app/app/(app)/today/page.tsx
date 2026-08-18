@@ -1,75 +1,98 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { HabitChecklist } from "@/components/habits/habit-checklist";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { TodayHero } from "@/components/today/today-hero";
+import { HabitCalendar } from "@/components/today/habit-calendar";
+import { MainRewardsSection } from "@/components/today/main-rewards-section";
+import { MotivationSection } from "@/components/today/motivation-section";
+import { TodayAddFab } from "@/components/today/today-add-fab";
 import { useOfflineSync } from "@/hooks/use-offline-sync";
-import { parseJson, type TodayResponse } from "@/lib/api-client";
-import { statusTextClass } from "@/lib/status";
-import { getTodayInTimezone, rateToStatus } from "@/lib/habits";
+import { useCachedQuery } from "@/hooks/use-cached-query";
+import { cacheKeys, clearDirty, invalidateCache } from "@/lib/client-cache";
+import { type AnalyticsApiResponse, type TodayResponse } from "@/lib/api-client";
+import { getTodayInTimezone } from "@/lib/habits";
+import { computeGamification } from "@/lib/gamification";
+import {
+  displayNameFromEmail,
+  parseAccountSettings,
+} from "@/lib/account-settings";
+import { getMotivationalMessage } from "@/lib/motivation";
 
 export default function TodayPage() {
-  const { fetchWithAuth, user } = useAuth();
+  const { user } = useAuth();
   const { queueLog } = useOfflineSync();
   const timezone =
     user?.timezone ??
     (typeof Intl !== "undefined"
       ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
       : "UTC");
-  const [date, setDate] = useState(() => getTodayInTimezone(timezone));
-  const [data, setData] = useState<TodayResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const todayDate = getTodayInTimezone(timezone);
+  const [date, setDate] = useState(todayDate);
 
-  useEffect(() => {
-    setDate(getTodayInTimezone(timezone));
-  }, [timezone]);
+  const cacheKey = cacheKeys.today(date);
+  const { data, loading, setCachedData } = useCachedQuery<TodayResponse>(
+    cacheKey,
+    `/api/habits/today?date=${date}`
+  );
 
-  const loadToday = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetchWithAuth(`/api/habits/today?date=${date}`);
-      const json = await parseJson<TodayResponse>(res);
-      setData(json);
-    } catch {
-      toast.error("Could not load today’s habits");
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchWithAuth, date]);
-
-  useEffect(() => {
-    void loadToday();
-  }, [loadToday]);
-
-  const shiftDate = (days: number) => {
-    const d = parseISO(date);
-    d.setDate(d.getDate() + days);
-    setDate(format(d, "yyyy-MM-dd"));
-  };
+  const { data: analytics } = useCachedQuery<AnalyticsApiResponse>(
+    cacheKeys.analytics,
+    "/api/analytics"
+  );
 
   const summary = useMemo(() => {
     const habits = data?.habits ?? [];
     const total = habits.length;
     const completed = habits.filter((h) => h.log?.completed).length;
     const rate = total === 0 ? 0 : Math.round((completed / total) * 100);
-    return { total, completed, rate };
+    const bestStreak = habits.reduce(
+      (max, h) => Math.max(max, h.streaks.longest),
+      0
+    );
+    return { total, completed, rate, bestStreak };
   }, [data]);
 
-  const handleToggle = async (
-    habitId: string,
-    completed: boolean,
-    note?: string | null
-  ) => {
-    const previous = data;
-    if (data) {
-      setData({
-        ...data,
-        habits: data.habits.map((h) =>
+  const gamification = useMemo(
+    () =>
+      computeGamification({
+        habitsCompleted: summary.completed,
+        totalHabits: summary.total,
+        completionRate: summary.rate,
+        dailyStreak: data?.dailyStreak ?? 0,
+        bestStreak: summary.bestStreak,
+      }),
+    [summary, data?.dailyStreak]
+  );
+
+  const motivation = useMemo(
+    () =>
+      getMotivationalMessage(
+        summary.rate,
+        data?.dailyStreak ?? 0,
+        summary.completed
+      ),
+    [summary.rate, summary.completed, data?.dailyStreak]
+  );
+
+  const handleToggle = useCallback(
+    async (
+      habitId: string,
+      completed: boolean,
+      note?: string | null,
+      subtasksDone?: string[]
+    ) => {
+      const previous = data;
+      setCachedData((current) => {
+        const base = current ?? data;
+        if (!base) {
+          return { date, habits: [] };
+        }
+
+        const habits = base.habits.map((h) =>
           h.id === habitId
             ? {
                 ...h,
@@ -79,80 +102,114 @@ export default function TodayPage() {
                   date,
                   completed,
                   note: note ?? h.log?.note ?? null,
+                  subtasksDone: subtasksDone ?? h.log?.subtasksDone ?? [],
                 },
               }
             : h
-        ),
+        );
+
+        const total = habits.length;
+        const done = habits.filter((h) => h.log?.completed).length;
+        const rate = total === 0 ? 0 : Math.round((done / total) * 100);
+        const weekDays = base.weekDays?.map((day) =>
+          day.date === date ? { ...day, rate } : day
+        );
+
+        return { ...base, habits, weekDays };
       });
-    }
 
-    try {
-      await queueLog({ habitId, date, completed, note });
-      void loadToday();
-    } catch {
-      setData(previous);
-      toast.error("Could not update habit");
-    }
-  };
+      try {
+        await queueLog({ habitId, date, completed, note, subtasksDone });
+        invalidateCache(cacheKeys.analytics);
+        clearDirty(cacheKey);
+      } catch (error) {
+        if (previous) setCachedData(previous);
+        toast.error("Could not update habit");
+        throw error;
+      }
+    },
+    [data, date, queueLog, setCachedData, cacheKey]
+  );
 
-  const rateStatus = rateToStatus(summary.rate);
+  const account = parseAccountSettings(user?.accountSettings);
+  const userName =
+    account.displayName?.trim() ||
+    (user?.email ? displayNameFromEmail(user.email) : "You");
 
   return (
-    <div className="pb-4">
-      <header className="px-5 pb-4 pt-8">
-        <p className="text-sm text-muted-foreground">
-          {format(parseISO(date), "EEEE, MMMM d")}
-        </p>
-        <h1 className="brand-title mt-1 text-2xl font-semibold tracking-tight">
-          Today
-        </h1>
+    <div className="pb-28">
+      <TodayHero
+        userName={userName}
+        avatarUrl={account.avatarDataUrl}
+        dailyStreak={data?.dailyStreak ?? 0}
+        weekDays={
+          data?.weekDays ??
+          Array.from({ length: 7 }, (_, i) => ({
+            date: "",
+            label: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][i] ?? "",
+            rate: 0,
+            isToday: false,
+            isFuture: false,
+          }))
+        }
+        selectedDate={date}
+        todayDate={todayDate}
+        completionRate={summary.rate}
+        motivationMessage={motivation}
+        onSelectDate={setDate}
+      />
 
-        <div className="mt-4 flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={() => shiftDate(-1)}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDate(new Date().toISOString().slice(0, 10))}
-          >
-            Jump to today
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => shiftDate(1)}>
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
-      </header>
+      <div className="mt-4 space-y-6">
+        <HabitCalendar
+          selectedDate={date}
+          todayDate={todayDate}
+          onSelectDate={setDate}
+          heatmap={analytics?.heatmaps.overall}
+        />
 
-      <div className="px-5 pb-5">
-        <Card>
-          <CardContent className="flex items-center justify-between p-5">
+        <div className="mx-5 overflow-hidden rounded-2xl border border-gray-20 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-10 px-4 py-3">
             <div>
-              <p className="text-sm text-muted-foreground">Completion</p>
-              <p className={`text-2xl font-semibold ${statusTextClass[rateStatus]}`}>
-                {summary.rate}%
+              <h2 className="text-base font-semibold text-gray-100">
+                Today&apos;s habits
+              </h2>
+              <p className="mt-0.5 text-xs text-gray-80">
+                {date === todayDate
+                  ? format(parseISO(date), "EEEE, MMMM d")
+                  : format(parseISO(date), "EEEE, MMM d")}
+                {" · "}
+                {summary.completed}/{summary.total} done
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Done</p>
-              <p className="text-2xl font-semibold text-foreground">
-                {summary.completed}
-                <span className="text-base font-normal text-muted-foreground">
-                  /{summary.total}
-                </span>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            {date !== todayDate && (
+              <button
+                type="button"
+                onClick={() => setDate(todayDate)}
+                className="shrink-0 rounded-lg bg-primary-20 px-2.5 py-1 text-xs font-medium text-primary-100 transition hover:bg-primary-30"
+              >
+                Back to today
+              </button>
+            )}
+          </div>
+
+          <HabitChecklist
+            habits={data?.habits ?? []}
+            date={date}
+            onToggle={handleToggle}
+            loading={loading && !data}
+          />
+        </div>
+
+        <MainRewardsSection state={gamification} />
+
+        <MotivationSection
+          gamification={gamification}
+          completionRate={summary.rate}
+          dailyStreak={data?.dailyStreak ?? 0}
+        />
       </div>
 
-      <HabitChecklist
-        habits={data?.habits ?? []}
-        date={date}
-        timezone={timezone}
-        onToggle={handleToggle}
-        loading={loading}
-      />
+      <TodayAddFab />
     </div>
   );
 }

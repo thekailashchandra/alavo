@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BrandLogo, brand } from "@alavo/brand";
+import { BrandLogo, brand, LEGAL } from "@alavo/brand";
 
 const appUrl = (
   process.env.NEXT_PUBLIC_PRODUCT_URL || "https://app.alavo.cc"
@@ -49,7 +49,7 @@ export function SiteShell({
             {title}
           </h1>
           <p className="mt-3 text-sm text-[var(--muted)]">
-            Last updated: July 29, 2026
+            Last updated: {LEGAL.lastUpdated}
           </p>
           <div className="legal-body mt-10 space-y-6 text-[15px] leading-relaxed text-[var(--foreground)]/90">
             {children}

@@ -19,6 +19,17 @@ export type NotificationSettings = {
   };
 };
 
+export type AccountSettings = {
+  displayName?: string;
+  avatarDataUrl?: string;
+  theme?: "indigo" | "light";
+  language?: "en" | "hi";
+  integrations?: {
+    googleCalendar?: boolean;
+    fitnessTracker?: boolean;
+  };
+};
+
 export type User = {
   id: string;
   email: string;
@@ -27,6 +38,13 @@ export type User = {
   provider: string;
   createdAt: string;
   notificationSettings: NotificationSettings | null;
+  accountSettings: AccountSettings | null;
+  privacyConsent: Record<string, unknown> | null;
+};
+
+export type HabitSubtask = {
+  id: string;
+  title: string;
 };
 
 export type Habit = {
@@ -41,6 +59,7 @@ export type Habit = {
   endTime: string | null;
   durationMinutes: number | null;
   reminderEnabled: boolean;
+  subtasks?: HabitSubtask[];
   archived: boolean;
   sortOrder: number;
   createdAt: string;
@@ -53,6 +72,7 @@ export type HabitLog = {
   date: string;
   completed: boolean;
   note: string | null;
+  subtasksDone?: string[];
 };
 
 export type HabitWithLogs = Habit & { logs: HabitLog[] };
@@ -60,12 +80,23 @@ export type HabitWithLogs = Habit & { logs: HabitLog[] };
 export type TodayHabitItem = Habit & {
   log: HabitLog | null;
   streaks: { current: number; longest: number; active: boolean };
+  weeklyProgress?: { completed: number; target: number } | null;
   logs?: HabitLog[];
+};
+
+export type WeekDaySummary = {
+  date: string;
+  label: string;
+  rate: number;
+  isToday: boolean;
+  isFuture: boolean;
 };
 
 export type TodayResponse = {
   date: string;
   habits: TodayHabitItem[];
+  weekDays?: WeekDaySummary[];
+  dailyStreak?: number;
 };
 
 export type JournalEntry = {
@@ -103,6 +134,7 @@ export type CreateHabitInput = {
   endTime?: string | null;
   durationMinutes?: number | null;
   reminderEnabled?: boolean;
+  subtasks?: HabitSubtask[];
 };
 
 export type UpdateHabitInput = Partial<CreateHabitInput> & {
@@ -115,6 +147,7 @@ export type HabitLogInput = {
   date: string;
   completed: boolean;
   note?: string | null;
+  subtasksDone?: string[];
 };
 
 export class ApiError extends Error {

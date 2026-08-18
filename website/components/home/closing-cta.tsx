@@ -8,7 +8,7 @@ const appUrl = (
 export function ClosingCta() {
   return (
     <section className="px-6 pb-10 pt-4 md:px-10 md:pb-14">
-      <div className="mx-auto max-w-5xl overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-[linear-gradient(145deg,rgba(91,107,154,0.14),rgba(255,255,255,0.7)_45%,rgba(243,241,236,0.9))] px-6 py-12 text-center shadow-[0_20px_50px_-36px_rgba(17,17,17,0.55)] md:px-12 md:py-14">
+      <div className="mx-auto max-w-5xl overflow-hidden rounded-[1.75rem] border border-[var(--alavo-gray-20)] bg-[linear-gradient(145deg,rgba(123,8,224,0.12),rgba(255,255,255,0.75)_45%,rgba(248,242,255,0.95))] px-6 py-12 text-center shadow-[0_20px_50px_-36px_rgba(52,54,77,0.2)] md:px-12 md:py-14">
         <h2 className="text-2xl font-semibold tracking-tight text-[var(--foreground)] md:text-3xl">
           Ready to build habits that stick?
         </h2>
@@ -24,7 +24,7 @@ export function ClosingCta() {
           </Link>
           <Link
             href={`${appUrl}/login`}
-            className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white/70 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
+            className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--alavo-gray-20)] bg-white/80 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
           >
             Sign in
           </Link>

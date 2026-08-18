@@ -96,10 +96,21 @@ function bestDayOfWeek(habits: HabitWithLogs[], timezone: string) {
   };
 }
 
-async function loadHabitsWithLogs(userId: string): Promise<HabitWithLogs[]> {
+const ANALYTICS_LOG_DAYS = 400;
+
+async function loadHabitsWithLogs(
+  userId: string,
+  timezone: string
+): Promise<HabitWithLogs[]> {
+  const today = getTodayInTimezone(timezone);
+  const lookback = format(subDays(parseISO(today), ANALYTICS_LOG_DAYS), "yyyy-MM-dd");
   return prisma.habit.findMany({
     where: { userId },
-    include: { logs: true },
+    include: {
+      logs: {
+        where: { date: { gte: lookback } },
+      },
+    },
     orderBy: { sortOrder: "asc" },
   });
 }
@@ -111,7 +122,7 @@ export async function GET(req: NextRequest) {
 
     const timezone = user!.timezone;
     const today = getTodayInTimezone(timezone);
-    const habits = await loadHabitsWithLogs(user!.id);
+    const habits = await loadHabitsWithLogs(user!.id, timezone);
     const activeHabits = habits.filter((h) => !h.archived);
 
     const { start: weekStart, end: weekEnd } = getWeekRange(today, timezone);

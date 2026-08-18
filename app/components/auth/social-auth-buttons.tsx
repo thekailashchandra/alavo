@@ -30,14 +30,17 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export function SocialAuthButtons({
   disabled = false,
+  consentReady = true,
   labelPrefix = "Continue",
 }: {
   disabled?: boolean;
+  consentReady?: boolean;
   labelPrefix?: string;
 }) {
   const [loading, setLoading] = useState(false);
 
   const startGoogle = async () => {
+    if (!consentReady) return;
     setLoading(true);
     try {
       const supabase = createClient();
@@ -65,7 +68,7 @@ export function SocialAuthButtons({
         type="button"
         variant="outline"
         className="h-12 w-full"
-        disabled={disabled || loading}
+        disabled={disabled || loading || !consentReady}
         onClick={() => void startGoogle()}
       >
         <GoogleIcon className="size-5" />

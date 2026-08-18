@@ -1,24 +1,63 @@
 {
+  "id": "/",
   "name": "Alavo",
   "short_name": "Alavo",
-  "description": "Track habits, build streaks, reflect daily.",
+  "description": "Track habits, build streaks, and reflect daily.",
   "start_url": "/today",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#5B6B9A",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#FCF9FD",
+  "theme_color": "#7B08E0",
   "orientation": "portrait",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["lifestyle", "health", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/Logo.png",
-      "sizes": "2049x1152",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Logo.png",
-      "sizes": "2049x1152",
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today",
+      "short_name": "Today",
+      "url": "/today",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Home widget",
+      "short_name": "Widget",
+      "url": "/widget",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Journal",
+      "short_name": "Journal",
+      "url": "/journal",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

@@ -1,95 +1,135 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { Calendar, Search } from "lucide-react";
+import { Calendar, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCachedQuery } from "@/hooks/use-cached-query";
+import { cacheKeys } from "@/lib/client-cache";
 import { parseJson, type JournalEntry } from "@/lib/api-client";
+import { getTodayInTimezone } from "@/lib/habits";
+import { cn } from "@/lib/utils";
+
+type JournalResponse = { entries: JournalEntry[] };
+
+function emptyEntry(date: string): JournalEntry {
+  return {
+    id: `local-${date}`,
+    date,
+    wentWell: "",
+    stressedAbout: "",
+    tomorrowFocus: "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
 
 export default function JournalPage() {
-  const { fetchWithAuth } = useAuth();
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const { fetchWithAuth, user } = useAuth();
+  const today = getTodayInTimezone(
+    user?.timezone ??
+      (typeof Intl !== "undefined"
+        ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+        : "UTC")
+  );
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [saving, setSaving] = useState(false);
   const [wentWell, setWentWell] = useState("");
   const [stressedAbout, setStressedAbout] = useState("");
   const [tomorrowFocus, setTomorrowFocus] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const hydratedDate = useRef("");
 
-  const [searchFrom, setSearchFrom] = useState("");
-  const [searchTo, setSearchTo] = useState("");
-  const [searchResults, setSearchResults] = useState<JournalEntry[]>([]);
-  const [searching, setSearching] = useState(false);
+  const { data, loading, setCachedData } = useCachedQuery<JournalResponse>(
+    cacheKeys.journal,
+    "/api/journal"
+  );
 
-  const loadEntry = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetchWithAuth(
-        `/api/journal?from=${date}&to=${date}`
-      );
-      const json = await parseJson<{ entries: JournalEntry[] }>(res);
-      const entry = json.entries[0] ?? null;
-      setWentWell(entry?.wentWell ?? "");
-      setStressedAbout(entry?.stressedAbout ?? "");
-      setTomorrowFocus(entry?.tomorrowFocus ?? "");
-    } catch {
-      toast.error("Could not load journal entry");
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchWithAuth, date]);
+  const entries = data?.entries ?? [];
 
   useEffect(() => {
-    void loadEntry();
-  }, [loadEntry]);
+    if (hydratedDate.current === selectedDate) return;
+    const entry = entries.find((item) => item.date === selectedDate);
+    if (loading && !entry) return;
+    setWentWell(entry?.wentWell ?? "");
+    setStressedAbout(entry?.stressedAbout ?? "");
+    setTomorrowFocus(entry?.tomorrowFocus ?? "");
+    hydratedDate.current = selectedDate;
+  }, [selectedDate, entries, loading]);
 
-  const handleSave = async () => {
+  const stacked = useMemo(
+    () => [...entries].sort((a, b) => b.date.localeCompare(a.date)),
+    [entries]
+  );
+
+  const selectDate = (next: string) => {
+    hydratedDate.current = "";
+    setSelectedDate(next);
+  };
+
+  const handleSave = useCallback(async () => {
+    if (!selectedDate) {
+      toast.error("Pick a date first");
+      return;
+    }
     setSaving(true);
+    const payload = {
+      date: selectedDate,
+      wentWell,
+      stressedAbout,
+      tomorrowFocus,
+    };
+    const optimistic: JournalEntry = {
+      ...(entries.find((entry) => entry.date === selectedDate) ?? emptyEntry(selectedDate)),
+      ...payload,
+      updatedAt: new Date().toISOString(),
+    };
+    setCachedData((prev) => {
+      const current = prev?.entries ?? [];
+      const next = current.filter((entry) => entry.date !== selectedDate);
+      next.push(optimistic);
+      next.sort((a, b) => b.date.localeCompare(a.date));
+      return { entries: next };
+    });
+
     try {
       const res = await fetchWithAuth("/api/journal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date,
-          wentWell,
-          stressedAbout,
-          tomorrowFocus,
-        }),
+        body: JSON.stringify(payload),
       });
-      await parseJson(res);
+      const json = await parseJson<{ entry: JournalEntry }>(res);
+      if (json.entry) {
+        setCachedData((prev) => {
+          const current = prev?.entries ?? [];
+          const next = current.filter((entry) => entry.date !== json.entry.date);
+          next.push(json.entry);
+          next.sort((a, b) => b.date.localeCompare(a.date));
+          return { entries: next };
+        });
+      }
       toast.success("Journal saved");
     } catch {
       toast.error("Could not save journal");
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleSearch = async () => {
-    setSearching(true);
-    try {
-      const params = new URLSearchParams();
-      if (searchFrom) params.set("from", searchFrom);
-      if (searchTo) params.set("to", searchTo);
-      const res = await fetchWithAuth(`/api/journal?${params.toString()}`);
-      const json = await parseJson<{ entries: JournalEntry[] }>(res);
-      setSearchResults(json.entries ?? []);
-      if ((json.entries ?? []).length === 0) {
-        toast.info("No entries found in that range");
-      }
-    } catch {
-      toast.error("Search failed");
-    } finally {
-      setSearching(false);
-    }
-  };
+  }, [
+    entries,
+    fetchWithAuth,
+    selectedDate,
+    setCachedData,
+    stressedAbout,
+    tomorrowFocus,
+    wentWell,
+  ]);
 
   return (
-    <div className="space-y-8 pb-6">
+    <div className="space-y-6 pb-4">
       <header className="px-5 pt-8">
         <h1 className="brand-title text-2xl font-semibold tracking-tight">
           Journal
@@ -99,7 +139,13 @@ export default function JournalPage() {
         </p>
       </header>
 
-      <section className="space-y-4 px-5">
+      <form
+        className="space-y-4 px-5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSave();
+        }}
+      >
         <div className="space-y-2">
           <Label htmlFor="journal-date" className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -108,12 +154,12 @@ export default function JournalPage() {
           <Input
             id="journal-date"
             type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            value={selectedDate}
+            onChange={(e) => selectDate(e.target.value)}
           />
         </div>
 
-        {loading ? (
+        {loading && !data ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
@@ -157,71 +203,65 @@ export default function JournalPage() {
               />
             </div>
 
-            <Button
-              className="w-full"
-              onClick={() => void handleSave()}
-              disabled={saving}
-            >
+            <Button className="w-full" type="submit" disabled={saving}>
               {saving ? "Saving…" : "Save entry"}
             </Button>
           </>
         )}
-      </section>
+      </form>
 
-      <section className="border-t border-border px-5 pt-6">
-        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          Search entries
+      <section className="px-5">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <Sparkles className="h-4 w-4 text-muted-foreground" />
+          Previous entries
         </h2>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="search-from">From</Label>
-            <Input
-              id="search-from"
-              type="date"
-              value={searchFrom}
-              onChange={(e) => setSearchFrom(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="search-to">To</Label>
-            <Input
-              id="search-to"
-              type="date"
-              value={searchTo}
-              onChange={(e) => setSearchTo(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <Button
-          variant="outline"
-          className="mt-3 w-full"
-          onClick={() => void handleSearch()}
-          disabled={searching}
-        >
-          {searching ? "Searching…" : "Search"}
-        </Button>
-
-        {searchResults.length > 0 && (
-          <ul className="mt-4 space-y-3">
-            {searchResults.map((entry) => (
-              <li
-                key={entry.id}
-                className="cursor-pointer rounded-2xl border border-border bg-white p-4 transition-colors hover:bg-muted/30"
-                onClick={() => setDate(entry.date)}
-              >
-                <p className="text-sm font-medium">
-                  {format(parseISO(entry.date), "MMM d, yyyy")}
-                </p>
-                {entry.wentWell && (
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                    {entry.wentWell}
-                  </p>
-                )}
-              </li>
-            ))}
+        {stacked.length === 0 ? (
+          <p className="rounded-3xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+            Saved reflections will stack here by date.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {stacked.map((entry) => {
+              const active = entry.date === selectedDate;
+              return (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    onClick={() => selectDate(entry.date)}
+                    className={cn(
+                      "w-full rounded-3xl border bg-white p-4 text-left shadow-[0_10px_28px_rgba(17,17,17,0.05)] transition-colors",
+                      active
+                        ? "border-primary/40 ring-2 ring-primary/15"
+                        : "border-border/80"
+                    )}
+                  >
+                    <p className="text-sm font-semibold">
+                      {format(parseISO(entry.date), "EEEE, MMM d, yyyy")}
+                    </p>
+                    {entry.wentWell ? (
+                      <p className="mt-2 line-clamp-3 text-sm text-zinc-700">
+                        <span className="font-medium text-zinc-500">Went well · </span>
+                        {entry.wentWell}
+                      </p>
+                    ) : null}
+                    {entry.stressedAbout ? (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        Stress · {entry.stressedAbout}
+                      </p>
+                    ) : null}
+                    {entry.tomorrowFocus ? (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        Tomorrow · {entry.tomorrowFocus}
+                      </p>
+                    ) : null}
+                    {!entry.wentWell && !entry.stressedAbout && !entry.tomorrowFocus ? (
+                      <p className="mt-2 text-xs text-muted-foreground">Empty entry</p>
+                    ) : null}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
@@ -9,7 +10,24 @@ export type AppUser = {
   provider: string;
   createdAt: Date;
   notificationSettings: unknown;
+  accountSettings: unknown;
+  privacyConsent: unknown;
 };
+
+export const USER_SELECT = {
+  id: true,
+  email: true,
+  emailVerified: true,
+  timezone: true,
+  provider: true,
+  createdAt: true,
+  notificationSettings: true,
+  accountSettings: true,
+  privacyConsent: true,
+} as const;
+
+const AUTH_MEMO_TTL_MS = 12_000;
+let authMemo: { key: string; user: AppUser; expiresAt: number } | null = null;
 
 export function publicUser(user: AppUser) {
   return {
@@ -20,6 +38,8 @@ export function publicUser(user: AppUser) {
     provider: user.provider,
     createdAt: user.createdAt,
     notificationSettings: user.notificationSettings ?? null,
+    accountSettings: user.accountSettings ?? null,
+    privacyConsent: user.privacyConsent ?? null,
   };
 }
 
@@ -41,15 +61,7 @@ async function ensureAppUser(sessionUser: {
 
   const existing = await prisma.user.findUnique({
     where: { email },
-    select: {
-      id: true,
-      email: true,
-      emailVerified: true,
-      timezone: true,
-      provider: true,
-      createdAt: true,
-      notificationSettings: true,
-    },
+    select: USER_SELECT,
   });
 
   if (existing) {
@@ -57,30 +69,14 @@ async function ensureAppUser(sessionUser: {
       return prisma.user.update({
         where: { id: existing.id },
         data: { emailVerified: verifiedAt },
-        select: {
-          id: true,
-          email: true,
-          emailVerified: true,
-          timezone: true,
-          provider: true,
-          createdAt: true,
-          notificationSettings: true,
-        },
+        select: USER_SELECT,
       });
     }
     if (!verifiedAt && existing.emailVerified) {
       return prisma.user.update({
         where: { id: existing.id },
         data: { emailVerified: null },
-        select: {
-          id: true,
-          email: true,
-          emailVerified: true,
-          timezone: true,
-          provider: true,
-          createdAt: true,
-          notificationSettings: true,
-        },
+        select: USER_SELECT,
       });
     }
     return existing;
@@ -97,16 +93,18 @@ async function ensureAppUser(sessionUser: {
       passwordHash: null,
       provider,
     },
-    select: {
-      id: true,
-      email: true,
-      emailVerified: true,
-      timezone: true,
-      provider: true,
-      createdAt: true,
-      notificationSettings: true,
-    },
+    select: USER_SELECT,
   });
+}
+
+async function sessionMemoKey() {
+  const cookieStore = await cookies();
+  const token = cookieStore
+    .getAll()
+    .filter((cookie) => cookie.name.includes("-auth-token"))
+    .map((cookie) => cookie.value)
+    .join(":");
+  return token.slice(-120);
 }
 
 export async function getAuthUser(): Promise<AppUser | null> {
@@ -120,16 +118,39 @@ export async function getAuthUser(): Promise<AppUser | null> {
     return null;
   }
 
+  const memoKey = await sessionMemoKey();
+  if (
+    memoKey &&
+    authMemo &&
+    authMemo.key === memoKey &&
+    authMemo.expiresAt > Date.now()
+  ) {
+    return authMemo.user;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user?.email) return null;
+  if (error || !data.user?.email) {
+    authMemo = null;
+    return null;
+  }
 
-  return ensureAppUser({
+  const user = await ensureAppUser({
     id: data.user.id,
     email: data.user.email,
     emailVerified: data.user.email_confirmed_at,
     appMetadata: data.user.app_metadata as Record<string, unknown> | null,
   });
+
+  if (memoKey) {
+    authMemo = {
+      key: memoKey,
+      user,
+      expiresAt: Date.now() + AUTH_MEMO_TTL_MS,
+    };
+  }
+
+  return user;
 }
 
 export async function requireAuth(_req?: Request) {

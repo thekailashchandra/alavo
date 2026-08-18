@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -12,6 +13,8 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { getTimezone, parseJson, type User } from "@/lib/api-client";
 import { signOutAction } from "@/lib/auth/actions";
+import { cacheKeys, invalidateCache, readCache, writeCache } from "@/lib/client-cache";
+import { clearLocalAppData } from "@/lib/compliance/consent";
 
 type AuthContextValue = {
   user: User | null;
@@ -31,19 +34,45 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const setUser = useCallback((next: User | null) => {
+    setUserState(next);
+    if (next) writeCache(cacheKeys.user, next);
+    else invalidateCache();
+  }, []);
+
+  useLayoutEffect(() => {
+    const cached = readCache<User>(cacheKeys.user);
+    if (cached) {
+      setUserState(cached);
+      setLoading(false);
+    }
+  }, []);
+
   const loadMe = useCallback(async () => {
-    const res = await fetch("/api/auth/me", { credentials: "include" });
+    const requestMe = () => fetch("/api/auth/me", { credentials: "include" });
+    let res = await requestMe();
+
+    if (res.status === 401) {
+      try {
+        const supabase = createClient();
+        await supabase.auth.getSession();
+      } catch {
+        // Session refresh is best-effort.
+      }
+      res = await requestMe();
+    }
+
     if (!res.ok) {
-      setUser(null);
+      if (res.status === 401) setUser(null);
       return null;
     }
     const me = await parseJson<User>(res);
     setUser(me);
     return me;
-  }, []);
+  }, [setUser]);
 
   const refresh = useCallback(async () => {
     const me = await loadMe();
@@ -161,9 +190,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       const supabase = createClient();
       await supabase.auth.signOut();
+    } finally {
+      clearLocalAppData();
       setUser(null);
     }
-  }, []);
+  }, [setUser]);
 
   useEffect(() => {
     let cancelled = false;

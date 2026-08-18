@@ -1,21 +1,54 @@
-const CACHE_NAME = "alavo-v2";
-const PRECACHE = ["/manifest.json", "/Logo.png"];
+const CACHE_NAME = "alavo-v4";
+const PRECACHE = [
+  "/manifest.json",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-192-maskable.png",
+  "/icon-512-maskable.png",
+  "/apple-touch-icon.png",
+  "/offline.html",
+];
+
+function isLocalDevHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
 
 self.addEventListener("install", (event) => {
+  if (isLocalDevHost(self.location.hostname)) {
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
+
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await Promise.all(
+        PRECACHE.map((url) =>
+          cache.add(url).catch(() => null)
+        )
+      );
+      await self.skipWaiting();
+    })()
   );
 });
 
 self.addEventListener("activate", (event) => {
+  if (isLocalDevHost(self.location.hostname)) {
+    event.waitUntil(
+      (async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+        await self.registration.unregister();
+      })()
+    );
+    return;
+  }
+
   event.waitUntil(
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
       )
       .then(() => self.clients.claim())
   );
@@ -32,37 +65,51 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
 
-  // Never cache API, auth, or Next.js / Turbopack bundles
+  // Never intercept local development — avoids false "offline" pages on localhost.
+  if (isLocalDevHost(url.hostname)) return;
+
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/auth/") ||
-    url.pathname.startsWith("/_next/") ||
-    url.pathname.includes("supabase")
+    url.pathname.startsWith("/_next/")
   ) {
     return;
   }
 
-  // Network-first for HTML navigations so auth UI stays current
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
-        .then((response) => response)
-        .catch(() => caches.match(request).then((cached) => cached || caches.match("/")))
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || caches.match("/offline.html");
+        })
     );
     return;
   }
 
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok && url.origin === self.location.origin) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      })
-      .catch(() => caches.match(request))
+    caches.match(request).then((cached) => {
+      const networked = fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => cached);
+
+      return cached || networked;
+    })
   );
 });
 

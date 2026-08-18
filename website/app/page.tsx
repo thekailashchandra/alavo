@@ -51,8 +51,9 @@ export default function HomePage() {
               Build habits that actually stick
             </h2>
             <p className="max-w-lg text-base leading-relaxed text-[var(--muted)] md:text-lg">
-              Track daily routines, keep streaks, and reflect in a simple
-              journal—without the clutter. Create an account and start free.
+              Track daily routines with a week-at-a-glance view, keep streaks
+              alive, reflect in a simple journal, and see your progress with
+              analytics—without the clutter.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -64,7 +65,7 @@ export default function HomePage() {
               </Link>
               <Link
                 href={`${appUrl}/login`}
-                className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white/60 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--alavo-gray-20)] bg-white/80 px-6 text-base font-medium text-[var(--foreground)] backdrop-blur transition hover:bg-white"
               >
                 Sign in to Alavo
               </Link>

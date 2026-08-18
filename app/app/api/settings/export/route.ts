@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
+import { DPDP_POLICY_VERSION } from "@alavo/brand";
 
 function escapeCsv(value: string | number | boolean | null | undefined) {
   if (value === null || value === undefined) return "";
@@ -12,13 +13,77 @@ function escapeCsv(value: string | number | boolean | null | undefined) {
   return str;
 }
 
+async function loadExportData(userId: string) {
+  const [profile, habits, journal, pushSubscriptions] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true,
+        timezone: true,
+        provider: true,
+        createdAt: true,
+        notificationSettings: true,
+        accountSettings: true,
+        privacyConsent: true,
+      },
+    }),
+    prisma.habit.findMany({
+      where: { userId },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.journalEntry.findMany({
+      where: { userId },
+      orderBy: { date: "asc" },
+    }),
+    prisma.pushSubscription.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        endpoint: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+
+  const habitIds = habits.map((h) => h.id);
+  const logs =
+    habitIds.length > 0
+      ? await prisma.habitLog.findMany({
+          where: { habitId: { in: habitIds } },
+          orderBy: [{ date: "asc" }, { habitId: "asc" }],
+        })
+      : [];
+
+  return { profile, habits, logs, journal, pushSubscriptions };
+}
+
 function buildCsv(
-  habits: Awaited<ReturnType<typeof loadExportData>>["habits"],
-  logs: Awaited<ReturnType<typeof loadExportData>>["logs"],
-  journal: Awaited<ReturnType<typeof loadExportData>>["journal"]
+  data: Awaited<ReturnType<typeof loadExportData>>
 ) {
   const sections: string[] = [];
 
+  sections.push("PROFILE");
+  sections.push(["field", "value"].join(","));
+  if (data.profile) {
+    for (const [key, value] of Object.entries(data.profile)) {
+      sections.push(
+        [
+          escapeCsv(key),
+          escapeCsv(
+            value instanceof Date
+              ? value.toISOString()
+              : typeof value === "object"
+                ? JSON.stringify(value)
+                : value
+          ),
+        ].join(",")
+      );
+    }
+  }
+
+  sections.push("");
   sections.push("HABITS");
   sections.push(
     [
@@ -35,7 +100,7 @@ function buildCsv(
       "createdAt",
     ].join(",")
   );
-  for (const habit of habits) {
+  for (const habit of data.habits) {
     sections.push(
       [
         escapeCsv(habit.id),
@@ -56,7 +121,7 @@ function buildCsv(
   sections.push("");
   sections.push("LOGS");
   sections.push(["id", "habitId", "date", "completed", "note", "updatedAt"].join(","));
-  for (const log of logs) {
+  for (const log of data.logs) {
     sections.push(
       [
         escapeCsv(log.id),
@@ -81,7 +146,7 @@ function buildCsv(
       "updatedAt",
     ].join(",")
   );
-  for (const entry of journal) {
+  for (const entry of data.journal) {
     sections.push(
       [
         escapeCsv(entry.id),
@@ -94,30 +159,20 @@ function buildCsv(
     );
   }
 
+  sections.push("");
+  sections.push("PUSH_SUBSCRIPTIONS");
+  sections.push(["id", "endpoint", "createdAt"].join(","));
+  for (const sub of data.pushSubscriptions) {
+    sections.push(
+      [
+        escapeCsv(sub.id),
+        escapeCsv(sub.endpoint),
+        escapeCsv(sub.createdAt.toISOString()),
+      ].join(",")
+    );
+  }
+
   return sections.join("\n");
-}
-
-async function loadExportData(userId: string) {
-  const habits = await prisma.habit.findMany({
-    where: { userId },
-    orderBy: { sortOrder: "asc" },
-  });
-
-  const habitIds = habits.map((h) => h.id);
-  const logs =
-    habitIds.length > 0
-      ? await prisma.habitLog.findMany({
-          where: { habitId: { in: habitIds } },
-          orderBy: [{ date: "asc" }, { habitId: "asc" }],
-        })
-      : [];
-
-  const journal = await prisma.journalEntry.findMany({
-    where: { userId },
-    orderBy: { date: "asc" },
-  });
-
-  return { habits, logs, journal };
 }
 
 export async function GET(req: NextRequest) {
@@ -131,7 +186,7 @@ export async function GET(req: NextRequest) {
     const data = await loadExportData(user!.id);
 
     if (format === "csv") {
-      const csv = buildCsv(data.habits, data.logs, data.journal);
+      const csv = buildCsv(data);
       return new Response(csv, {
         status: 200,
         headers: {
@@ -144,9 +199,12 @@ export async function GET(req: NextRequest) {
     if (format === "json") {
       return jsonOk({
         exportedAt: new Date().toISOString(),
+        policyVersion: DPDP_POLICY_VERSION,
+        profile: data.profile,
         habits: data.habits,
         logs: data.logs,
         journal: data.journal,
+        pushSubscriptions: data.pushSubscriptions,
       });
     }
 

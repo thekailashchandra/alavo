@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { HABIT_ICON_NAMES, getHabitIcon } from "@/lib/icons";
-import type { CreateHabitInput, Habit, UpdateHabitInput } from "@/lib/api-client";
+import type { CreateHabitInput, Habit, HabitSubtask, UpdateHabitInput } from "@/lib/api-client";
 import {
   TimeSchedulePicker,
   type TimeScheduleValue,
@@ -27,6 +27,7 @@ type HabitFormProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   habit?: Habit | null;
+  initialDraft?: CreateHabitInput | null;
   onSubmit: (data: CreateHabitInput | UpdateHabitInput) => Promise<void>;
 };
 
@@ -38,6 +39,7 @@ type FormState = {
   timesPerWeek: number;
   schedule: TimeScheduleValue;
   reminderEnabled: boolean;
+  subtasks: HabitSubtask[];
 };
 
 function addMinutesToTime(time: string, mins: number) {
@@ -54,6 +56,26 @@ function durationBetween(start: string, end: string) {
   let duration = eh * 60 + em - (sh * 60 + sm);
   if (duration <= 0) duration += 24 * 60;
   return duration;
+}
+
+function draftToForm(draft: CreateHabitInput): FormState {
+  const start = draft.targetTime ?? "07:00";
+  const end = draft.endTime ?? addMinutesToTime(start, draft.durationMinutes ?? 30);
+  return {
+    name: draft.name,
+    icon: draft.icon,
+    frequencyType: draft.frequencyType,
+    weekdays: draft.weekdays?.length ? draft.weekdays : [1, 2, 3, 4, 5],
+    timesPerWeek: draft.timesPerWeek ?? 3,
+    schedule: {
+      mode: "range",
+      targetTime: start,
+      endTime: end,
+      durationMinutes: durationBetween(start, end),
+    },
+    reminderEnabled: draft.reminderEnabled ?? false,
+    subtasks: draft.subtasks ?? [],
+  };
 }
 
 function habitToForm(habit?: Habit | null): FormState {
@@ -75,20 +97,22 @@ function habitToForm(habit?: Habit | null): FormState {
       durationMinutes: durationBetween(start, end),
     },
     reminderEnabled: habit?.reminderEnabled ?? false,
+    subtasks: habit?.subtasks ?? [],
   };
 }
 
-export function HabitForm({ open, onOpenChange, habit, onSubmit }: HabitFormProps) {
+export function HabitForm({ open, onOpenChange, habit, initialDraft, onSubmit }: HabitFormProps) {
   const [form, setForm] = useState<FormState>(() => habitToForm(habit));
-  const [saving, setSaving] = useState(false);
   const [iconTrayOpen, setIconTrayOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm(habitToForm(habit));
+      if (habit) setForm(habitToForm(habit));
+      else if (initialDraft) setForm(draftToForm(initialDraft));
+      else setForm(habitToForm(null));
       setIconTrayOpen(false);
     }
-  }, [open, habit]);
+  }, [open, habit, initialDraft]);
 
   const toggleWeekday = (day: number) => {
     setForm((prev) => {
@@ -100,30 +124,26 @@ export function HabitForm({ open, onOpenChange, habit, onSubmit }: HabitFormProp
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
     if (!form.schedule.targetTime) return;
 
-    setSaving(true);
-    try {
-      const payload: CreateHabitInput = {
-        name: form.name.trim(),
-        icon: form.icon,
-        frequencyType: form.frequencyType,
-        weekdays: form.frequencyType === "WEEKDAYS" ? form.weekdays : [],
-        timesPerWeek:
-          form.frequencyType === "TIMES_PER_WEEK" ? form.timesPerWeek : null,
-        targetTime: form.schedule.targetTime,
-        endTime: form.schedule.endTime || null,
-        durationMinutes: form.schedule.durationMinutes,
-        reminderEnabled: form.reminderEnabled,
-      };
-      await onSubmit(payload);
-      onOpenChange(false);
-    } finally {
-      setSaving(false);
-    }
+    const payload: CreateHabitInput = {
+      name: form.name.trim(),
+      icon: form.icon,
+      frequencyType: form.frequencyType,
+      weekdays: form.frequencyType === "WEEKDAYS" ? form.weekdays : [],
+      timesPerWeek:
+        form.frequencyType === "TIMES_PER_WEEK" ? form.timesPerWeek : null,
+      targetTime: form.schedule.targetTime,
+      endTime: form.schedule.endTime || null,
+      durationMinutes: form.schedule.durationMinutes,
+      reminderEnabled: form.reminderEnabled,
+      subtasks: form.subtasks.filter((s) => s.title.trim()),
+    };
+    onOpenChange(false);
+    void onSubmit(payload);
   };
 
   return (
@@ -303,8 +323,73 @@ export function HabitForm({ open, onOpenChange, habit, onSubmit }: HabitFormProp
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={saving}>
-            {saving ? "Saving…" : habit ? "Save changes" : "Create habit"}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Subtasks</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1"
+                onClick={() =>
+                  setForm((p) => ({
+                    ...p,
+                    subtasks: [
+                      ...p.subtasks,
+                      { id: crypto.randomUUID(), title: "" },
+                    ],
+                  }))
+                }
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add step
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Break complex habits into smaller steps.
+            </p>
+            {form.subtasks.length > 0 && (
+              <div className="space-y-2">
+                {form.subtasks.map((subtask, index) => (
+                  <div key={subtask.id} className="flex gap-2">
+                    <Input
+                      placeholder={`Step ${index + 1}`}
+                      value={subtask.title}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          subtasks: p.subtasks.map((s) =>
+                            s.id === subtask.id
+                              ? { ...s, title: e.target.value }
+                              : s
+                          ),
+                        }))
+                      }
+                      maxLength={80}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-muted-foreground"
+                      onClick={() =>
+                        setForm((p) => ({
+                          ...p,
+                          subtasks: p.subtasks.filter((s) => s.id !== subtask.id),
+                        }))
+                      }
+                      aria-label="Remove subtask"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Button type="submit" className="w-full">
+            {habit ? "Save changes" : "Create habit"}
           </Button>
         </form>
       </DialogContent>

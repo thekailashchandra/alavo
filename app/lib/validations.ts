@@ -45,6 +45,11 @@ export const habitFrequencySchema = z.discriminatedUnion("frequencyType", [
   }),
 ]);
 
+const subtaskSchema = z.object({
+  id: z.string().min(1).max(64),
+  title: z.string().trim().min(1).max(80),
+});
+
 const habitFieldsSchema = z.object({
   name: z.string().trim().min(1).max(80),
   icon: z.string().min(1).max(64).default("Circle"),
@@ -61,6 +66,7 @@ const habitFieldsSchema = z.object({
     .optional(),
   durationMinutes: z.number().int().min(5).max(24 * 60).nullable().optional(),
   reminderEnabled: z.boolean().default(false),
+  subtasks: z.array(subtaskSchema).max(12).optional(),
 });
 
 function refineHabitFrequency(
@@ -106,13 +112,14 @@ export const habitLogSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   completed: z.boolean(),
   note: z.string().max(500).nullable().optional(),
+  subtasksDone: z.array(z.string().min(1).max(64)).optional(),
 });
 
 export const journalSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  wentWell: z.string().max(2000).default(""),
-  stressedAbout: z.string().max(2000).default(""),
-  tomorrowFocus: z.string().max(2000).default(""),
+  wentWell: z.string().max(2000).optional().transform((value) => value ?? ""),
+  stressedAbout: z.string().max(2000).optional().transform((value) => value ?? ""),
+  tomorrowFocus: z.string().max(2000).optional().transform((value) => value ?? ""),
 });
 
 export const journalQuerySchema = z.object({

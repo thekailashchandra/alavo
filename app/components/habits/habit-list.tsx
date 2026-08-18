@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Archive,
   ArchiveRestore,
+  Bell,
   GripVertical,
   MoreHorizontal,
   Pencil,
@@ -39,8 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { getHabitIcon } from "@/lib/icons";
+import { cn, formatClock, formatDuration, minutesBetween } from "@/lib/utils";
 import type { Habit } from "@/lib/api-client";
 
 type HabitListProps = {
@@ -72,7 +72,6 @@ function SortableHabitRow({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const {
     attributes,
@@ -88,28 +87,14 @@ function SortableHabitRow({
     transition,
   };
 
-  const Icon = getHabitIcon(habit.icon);
-
-  const handleArchive = async () => {
-    setBusy(true);
-    try {
-      await onArchive(habit, !habit.archived);
-      toast.success(habit.archived ? "Habit restored" : "Habit archived");
-      setMenuOpen(false);
-    } finally {
-      setBusy(false);
-    }
+  const handleArchive = () => {
+    setMenuOpen(false);
+    void onArchive(habit, !habit.archived);
   };
 
-  const handleDelete = async () => {
-    setBusy(true);
-    try {
-      await onDelete(habit);
-      toast.success("Habit deleted");
-      setDeleteOpen(false);
-    } finally {
-      setBusy(false);
-    }
+  const handleDelete = () => {
+    setDeleteOpen(false);
+    void onDelete(habit);
   };
 
   return (
@@ -118,7 +103,7 @@ function SortableHabitRow({
         ref={setNodeRef}
         style={style}
         className={cn(
-          "flex items-center gap-2 rounded-2xl border border-border bg-white p-3 shadow-sm",
+          "flex items-center gap-2 rounded-3xl border border-border/80 bg-white p-3 shadow-[0_10px_30px_rgba(17,17,17,0.05)]",
           isDragging && "z-10 opacity-80 shadow-lg",
           habit.archived && "opacity-60"
         )}
@@ -135,17 +120,35 @@ function SortableHabitRow({
           </button>
         )}
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-          <Icon className="h-5 w-5 text-zinc-600" />
-        </div>
-
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{habit.name}</p>
-          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary">{FREQ_LABELS[habit.frequencyType]}</Badge>
             {habit.frequencyType === "TIMES_PER_WEEK" && habit.timesPerWeek && (
               <span className="text-xs text-muted-foreground">
                 {habit.timesPerWeek}× / week
+              </span>
+            )}
+            {formatClock(habit.targetTime) ? (
+              <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-700">
+                {formatClock(habit.targetTime)}
+                {formatClock(habit.endTime) ? ` – ${formatClock(habit.endTime)}` : ""}
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500">
+                No time set
+              </span>
+            )}
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+              {formatDuration(
+                habit.durationMinutes ??
+                  minutesBetween(habit.targetTime, habit.endTime)
+              ) ?? "No duration"}
+            </span>
+            {habit.reminderEnabled && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-primary-30 px-2 py-0.5 text-[11px] font-medium text-primary-100">
+                <Bell className="h-3 w-3" />
+                Reminder
               </span>
             )}
             {habit.archived && <Badge variant="outline">Archived</Badge>}
@@ -185,7 +188,6 @@ function SortableHabitRow({
                   type="button"
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
                   onClick={() => void handleArchive()}
-                  disabled={busy}
                 >
                   {habit.archived ? (
                     <>
@@ -230,7 +232,6 @@ function SortableHabitRow({
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700"
               onClick={() => void handleDelete()}
-              disabled={busy}
             >
               Delete
             </AlertDialogAction>
@@ -265,7 +266,9 @@ export function HabitList({
   }, [filtered]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 180, tolerance: 10 },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

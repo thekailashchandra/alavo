@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   BarChart3,
   BookOpen,
@@ -21,26 +22,62 @@ const NAV_ITEMS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const listRef = useRef<HTMLUListElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  const activeIndex = NAV_ITEMS.findIndex(
+    ({ href }) => pathname === href || pathname.startsWith(`${href}/`)
+  );
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      const index = activeIndex >= 0 ? activeIndex : 0;
+      const el = itemRefs.current[index];
+      const list = listRef.current;
+      if (!el || !list) return;
+      const listRect = list.getBoundingClientRect();
+      const itemRect = el.getBoundingClientRect();
+      setIndicator({
+        left: itemRect.left - listRect.left,
+        width: itemRect.width,
+      });
+    };
+
+    updateIndicator();
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [activeIndex, pathname]);
 
   return (
-    <nav className="sticky bottom-0 z-40 border-t border-border bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
-      <ul className="flex items-stretch justify-around px-1 pt-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+    <nav className="bottom-nav">
+      <ul ref={listRef} className="bottom-nav-list">
+        <span
+          className="bottom-nav-indicator"
+          style={{
+            transform: `translateX(${indicator.left}px)`,
+            width: indicator.width,
+          }}
+          aria-hidden
+        />
+        {NAV_ITEMS.map(({ href, label, icon: Icon }, index) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <li key={href} className="flex-1">
               <Link
+                ref={(node) => {
+                  itemRefs.current[index] = node;
+                }}
                 href={href}
+                prefetch
                 className={cn(
-                  "flex flex-col items-center gap-0.5 rounded-xl px-2 py-2 text-[10px] font-medium transition-colors",
-                  active
-                    ? "text-primary"
-                    : "text-zinc-400 hover:text-zinc-600"
+                  "bottom-nav-item",
+                  active && "bottom-nav-item-active"
                 )}
               >
                 <Icon
                   className={cn(
-                    "h-5 w-5",
+                    "h-[18px] w-[18px]",
                     active ? "stroke-[2.25]" : "stroke-[1.75]"
                   )}
                 />

@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { habitLogSchema } from "@/lib/validations";
@@ -32,10 +33,12 @@ async function upsertLog(
       date: entry.date,
       completed: entry.completed,
       note: entry.note ?? null,
+      subtasksDone: entry.subtasksDone?.length ? entry.subtasksDone : Prisma.DbNull,
     },
     update: {
       completed: entry.completed,
       note: entry.note ?? null,
+      subtasksDone: entry.subtasksDone?.length ? entry.subtasksDone : Prisma.DbNull,
     },
   });
 }
@@ -116,10 +119,16 @@ export async function POST(req: NextRequest) {
                 date: entry.date,
                 completed: entry.completed,
                 note: entry.note ?? null,
+                subtasksDone: entry.subtasksDone?.length
+                  ? entry.subtasksDone
+                  : Prisma.DbNull,
               },
               update: {
                 completed: entry.completed,
                 note: entry.note ?? null,
+                subtasksDone: entry.subtasksDone?.length
+                  ? entry.subtasksDone
+                  : Prisma.DbNull,
               },
             })
           );

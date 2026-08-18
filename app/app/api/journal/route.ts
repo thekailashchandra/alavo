@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     const entries = await prisma.journalEntry.findMany({
       where,
       orderBy: { date: "desc" },
+      take: query.from || query.to ? 365 : 90,
     });
 
     return jsonOk({ entries });

@@ -22,9 +22,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-outfit), system-ui, sans-serif;
   background:
-    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(91, 107, 154, 0.22), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(17, 17, 17, 0.06), transparent 50%),
-    linear-gradient(165deg, #f7f7f8 0%, #e8eaef 48%, #f3f1ec 100%);
+    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(123, 8, 224, 0.14), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(161, 55, 253, 0.1), transparent 50%),
+    linear-gradient(165deg, #fcf9fd 0%, #f8f2ff 48%, #fcf9fd 100%);
 }
 
 /* Sans headings for a modern app feel (matches logo/UI) */

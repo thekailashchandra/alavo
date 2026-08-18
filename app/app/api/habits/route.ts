@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const where: { userId: string; archived?: boolean } = { userId: user!.id };
     if (archivedParam === "true") {
       where.archived = true;
-    } else if (archivedParam === "false" || archivedParam === null) {
+    } else if (archivedParam === "false") {
       where.archived = false;
     }
 
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
         endTime: data.endTime ?? null,
         durationMinutes: data.durationMinutes ?? null,
         reminderEnabled: data.reminderEnabled,
+        subtasks: data.subtasks?.length ? data.subtasks : undefined,
         sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
       },
     });

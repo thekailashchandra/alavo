@@ -31,6 +31,8 @@ model User {
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   notificationSettings Json?
+  accountSettings      Json?
+  privacyConsent       Json?
   habits               Habit[]
   journalEntries       JournalEntry[]
   pushSubscriptions    PushSubscription[]
@@ -63,6 +65,7 @@ model Habit {
   endTime         String?
   durationMinutes Int?
   reminderEnabled Boolean            @default(false)
+  subtasks        Json?
   archived        Boolean            @default(false)
   sortOrder       Int                @default(0)
   createdAt       DateTime           @default(now())
@@ -77,9 +80,10 @@ model HabitLog {
   id        String   @id @default(cuid())
   habitId   String
   date      String
-  completed Boolean  @default(false)
-  note      String?
-  createdAt DateTime @default(now())
+  completed     Boolean  @default(false)
+  note          String?
+  subtasksDone  Json?
+  createdAt     DateTime @default(now())
   updatedAt DateTime @updatedAt
   habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
 

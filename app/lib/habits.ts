@@ -287,3 +287,65 @@ export function rateToStatus(rate: number): DayStatus {
   if (rate > 0) return "missed_long";
   return "empty";
 }
+
+export function dailyCompletionRate(
+  habits: HabitWithLogs[],
+  dateStr: string,
+  timezone: string
+) {
+  return completionRateForRange(habits, timezone, dateStr, dateStr).rate;
+}
+
+const CALENDAR_WEEK_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+export function getWeekDaySummaries(
+  habits: HabitWithLogs[],
+  dateStr: string,
+  timezone: string,
+  today = getTodayInTimezone(timezone)
+) {
+  const utc = fromZonedTime(`${dateStr}T12:00:00`, timezone);
+  const zoned = toZonedTime(utc, timezone);
+  const weekStart = startOfWeek(zoned, { weekStartsOn: 0 });
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = addDays(weekStart, index);
+    const date = format(day, "yyyy-MM-dd");
+    const weekday = getWeekdayInTimezone(timezone, date);
+
+    return {
+      date,
+      label: CALENDAR_WEEK_LABELS[weekday] ?? format(day, "EEEEE"),
+      rate: dailyCompletionRate(habits, date, timezone),
+      isToday: date === today,
+      isFuture: date > today,
+    };
+  });
+}
+
+export function calculateDailyStreak(
+  habits: HabitWithLogs[],
+  timezone: string,
+  today = getTodayInTimezone(timezone)
+) {
+  if (habits.length === 0) return 0;
+
+  let streak = 0;
+  let cursor = today;
+  const todayRate = dailyCompletionRate(habits, today, timezone);
+
+  if (todayRate >= 100) {
+    streak = 1;
+    cursor = format(subDays(parseISO(today), 1), "yyyy-MM-dd");
+  } else {
+    cursor = format(subDays(parseISO(today), 1), "yyyy-MM-dd");
+  }
+
+  while (dailyCompletionRate(habits, cursor, timezone) >= 100) {
+    streak += 1;
+    cursor = format(subDays(parseISO(cursor), 1), "yyyy-MM-dd");
+    if (streak > 10000) break;
+  }
+
+  return streak;
+}

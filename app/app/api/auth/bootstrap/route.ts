@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getAuthUser, publicUser } from "@/lib/auth";
+import { getAuthUser, publicUser, USER_SELECT } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
 import { z } from "zod";
@@ -29,15 +29,7 @@ export async function POST(req: NextRequest) {
           ? { emailVerified: new Date() }
           : {}),
       },
-      select: {
-        id: true,
-        email: true,
-        emailVerified: true,
-        timezone: true,
-        provider: true,
-        createdAt: true,
-        notificationSettings: true,
-      },
+      select: USER_SELECT,
     });
 
     return jsonOk(publicUser(updated));

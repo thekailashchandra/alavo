@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { LEGAL } from "@alavo/brand";
 import { createClient } from "@/lib/supabase/client";
-import { getTimezone } from "@/lib/api-client";
+import { getTimezone, parseJson, type User } from "@/lib/api-client";
 import {
   finalizePendingVerification,
   isDuplicateAccountError,
@@ -18,11 +19,33 @@ import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const PRIVACY_URL = `${LEGAL.websiteUrl}/privacy`;
+const TERMS_URL = `${LEGAL.websiteUrl}/terms`;
+
+async function recordSignupConsent() {
+  const res = await fetch("/api/settings/consent", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ageConfirmed: true,
+      method: "signup",
+    }),
+  });
+  if (!res.ok) throw new Error("Could not record privacy consent");
+  return parseJson<User>(res);
+}
 
 export default function SignupPage() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const consentReady = ageConfirmed && termsAccepted;
 
   useEffect(() => {
     void getTimezone();
@@ -35,6 +58,11 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!consentReady) {
+      toast.error("Please confirm your age and accept the Terms and Privacy Policy");
+      return;
+    }
+
     const form = new FormData(e.currentTarget);
     const name = String(form.get("name") || "").trim();
     const email = String(form.get("email") || "")
@@ -85,6 +113,7 @@ export default function SignupPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ timezone: getTimezone() }),
         }).catch(() => null);
+        await recordSignupConsent();
         toast.success("Account created");
         router.replace("/today");
         return;
@@ -109,7 +138,11 @@ export default function SignupPage() {
       </div>
 
       <div className="flex flex-1 flex-col gap-5">
-        <SocialAuthButtons disabled={pending} labelPrefix="Continue" />
+        <SocialAuthButtons
+          disabled={pending}
+          consentReady={consentReady}
+          labelPrefix="Continue"
+        />
 
         <form
           onSubmit={(e) => void handleSubmit(e)}
@@ -170,7 +203,48 @@ export default function SignupPage() {
             </p>
           </div>
 
-          <Button type="submit" className="mt-2 h-12 w-full" disabled={pending}>
+          <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="signup-age"
+                checked={ageConfirmed}
+                onCheckedChange={(v) => setAgeConfirmed(v === true)}
+              />
+              <Label htmlFor="signup-age" className="text-sm leading-snug font-normal">
+                I am {LEGAL.minimumAge} years of age or older.
+              </Label>
+            </div>
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="signup-terms"
+                checked={termsAccepted}
+                onCheckedChange={(v) => setTermsAccepted(v === true)}
+              />
+              <Label htmlFor="signup-terms" className="text-sm leading-snug font-normal">
+                I agree to the{" "}
+                <Link
+                  href={TERMS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href={PRIVACY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+                , including processing under the DPDP Act, 2023.
+              </Label>
+            </div>
+          </div>
+
+          <Button type="submit" className="mt-2 h-12 w-full" disabled={pending || !consentReady}>
             {pending ? "Creating account…" : "Create account"}
           </Button>
 

@@ -1,21 +1,19 @@
 const FEATURES = [
   {
-    title: "Daily habit tracking",
+    title: "Today at a glance",
     description:
-      "Check off routines in a clean today view so progress stays visible and simple.",
+      "See your week in seven rings, track daily completion, and jump to any day with one tap.",
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
-        <rect
-          x="4"
-          y="4"
-          width="16"
-          height="16"
-          rx="4"
+        <circle
+          cx="12"
+          cy="12"
+          r="8"
           stroke="currentColor"
           strokeWidth="1.75"
         />
         <path
-          d="M8 12.2 10.6 14.8 16 9.2"
+          d="M12 4v8l4 2"
           stroke="currentColor"
           strokeWidth="1.75"
           strokeLinecap="round"
@@ -25,9 +23,9 @@ const FEATURES = [
     ),
   },
   {
-    title: "Streaks & consistency",
+    title: "Streaks & analytics",
     description:
-      "Watch streaks grow and spot patterns so building habit becomes a rhythm.",
+      "Watch streaks grow, review weekly trends, and spot patterns with clean progress charts.",
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
         <path
@@ -37,18 +35,19 @@ const FEATURES = [
           strokeLinejoin="round"
         />
         <path
-          d="M8.5 14.5c1.3 1.4 2.4 3 3.5 6.5 1.1-3.5 2.2-5.1 3.5-6.5"
+          d="M4 19h16M7 16l3-3 3 2 4-5"
           stroke="currentColor"
           strokeWidth="1.75"
           strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </svg>
     ),
   },
   {
-    title: "Simple journal",
+    title: "Journal & rewards",
     description:
-      "Capture short reflections so you remember what helped—and what to change.",
+      "Capture short reflections, earn milestones, and stay motivated without the clutter.",
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
         <path
@@ -89,7 +88,7 @@ export function FeaturesSection() {
           {FEATURES.map((feature, index) => (
             <li
               key={feature.title}
-              className="feature-card rounded-[1.35rem] border border-black/[0.06] bg-white/55 p-6 shadow-[0_12px_40px_-32px_rgba(17,17,17,0.45)] backdrop-blur-sm"
+              className="feature-card rounded-[1.35rem] border border-[var(--alavo-gray-20)] bg-white/70 p-6 shadow-[0_12px_40px_-32px_rgba(52,54,77,0.18)] backdrop-blur-sm"
               style={{ animationDelay: `${120 + index * 80}ms` }}
             >
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--primary)]/10 text-[var(--primary)]">
