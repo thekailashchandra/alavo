@@ -31,7 +31,7 @@ export default function RefundPage() {
         analytics) is granted immediately upon successful payment, fees are
         generally <strong>non-refundable</strong> once the plan has been
         activated, except as required by the Consumer Protection Act, 2019 or
-        Razorpay's dispute process.
+        Razorpay&apos;s dispute process.
       </p>
 
       <h2>3. Eligible refund situations</h2>
