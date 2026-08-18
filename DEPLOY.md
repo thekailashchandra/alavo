@@ -32,8 +32,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_APP_URL=https://app.alavo.cc
 CRON_SECRET=
-# Set true to pause new sign-ups without a deploy rollback
-NEXT_PUBLIC_REGISTRATION_CLOSED=
+# Default should stay false for public sign-ups; set true only to pause registrations
+NEXT_PUBLIC_REGISTRATION_CLOSED=false
 GMAIL_USER=
 GMAIL_APP_PASSWORD=
 EMAIL_FROM=Alavo <hi@alavo.cc>
