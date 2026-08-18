@@ -1,11 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isLocalHost } from "@/lib/auth/origin";
+
+function requestOrigin(request: NextRequest) {
+  const host = (request.headers.get("host") || "").split(",")[0].trim();
+  if (host && isLocalHost(host)) {
+    return `http://${host}`;
+  }
+  return request.nextUrl.origin;
+}
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl;
-  const code = searchParams.get("code");
-  const provider = searchParams.get("provider");
-  const isNew = searchParams.get("new") === "1";
+  const origin = requestOrigin(request);
+  const code = request.nextUrl.searchParams.get("code");
+  const provider = request.nextUrl.searchParams.get("provider") || "google";
+  const isNew = request.nextUrl.searchParams.get("new") === "1";
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=oauth`);

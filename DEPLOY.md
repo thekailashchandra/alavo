@@ -92,7 +92,11 @@ After adding domains in Vercel, use the records Vercel shows. Usually:
 
 Supabase Dashboard → Authentication → URL Configuration:
 - Site URL: `https://app.alavo.cc`
-- Redirect URLs: `https://app.alavo.cc/auth/callback`, `http://localhost:3000/auth/callback`
+- Redirect URLs (exact match, no query string):
+  - `https://app.alavo.cc/auth/callback`
+  - `http://localhost:3000/auth/callback`
+  - `http://localhost:3000/**`
+  - `http://127.0.0.1:3000/auth/callback`
 - Trusted domains: `alavo.cc`, `app.alavo.cc`
 
 Supabase → Auth → SMTP: Gmail (`smtp.gmail.com`, port 465) for signup OTP.

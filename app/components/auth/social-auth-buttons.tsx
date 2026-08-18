@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { oauthCallbackUrl } from "@/lib/auth/origin";
 import { Button } from "@/components/ui/button";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -44,16 +45,20 @@ export function SocialAuthButtons({
     setLoading(true);
     try {
       const supabase = createClient();
-      const origin = window.location.origin;
-      const { error } = await supabase.auth.signInWithOAuth({
+      const redirectTo = oauthCallbackUrl(window.location.origin);
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${origin}/auth/callback?provider=google`,
+          redirectTo,
+          skipBrowserRedirect: true,
         },
       });
-      if (error) {
-        throw new Error(error.message || "Could not start Google sign-in");
+      if (error || !data.url) {
+        throw new Error(error?.message || "Could not start Google sign-in");
       }
+      const authorizeUrl = new URL(data.url);
+      authorizeUrl.searchParams.set("redirect_to", redirectTo);
+      window.location.assign(authorizeUrl.toString());
     } catch (error) {
       setLoading(false);
       toast.error(
