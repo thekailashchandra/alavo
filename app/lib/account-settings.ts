@@ -5,7 +5,6 @@ export type AccountSettings = {
   language?: "en" | "hi";
   integrations?: {
     googleCalendar?: boolean;
-    fitnessTracker?: boolean;
   };
 };
 
@@ -14,7 +13,6 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
   language: "en",
   integrations: {
     googleCalendar: false,
-    fitnessTracker: false,
   },
 };
 

@@ -16,6 +16,8 @@ import { HabitForm } from "@/components/habits/habit-form";
 
 import { HabitList } from "@/components/habits/habit-list";
 
+import { PaywallDialog } from "@/components/billing/paywall-dialog";
+
 import { Button } from "@/components/ui/button";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +29,8 @@ import { cacheKeys, clearDirty, invalidateCache } from "@/lib/client-cache";
 import {
 
   parseJson,
+
+  ApiError,
 
   type CreateHabitInput,
 
@@ -127,7 +131,7 @@ function buildOptimisticHabit(
 
 
 export default function HabitsPage() {
-  const { fetchWithAuth } = useAuth();
+  const { fetchWithAuth, user } = useAuth();
 
   const { data, loading, setCachedData } = useCachedQuery<HabitsResponse>(
 
@@ -146,6 +150,21 @@ export default function HabitsPage() {
   const [catalogDraft, setCatalogDraft] = useState<CreateHabitInput | null>(null);
 
   const [editing, setEditing] = useState<Habit | null>(null);
+  const [paywall, setPaywall] = useState(false);
+  const activeCount = habits.filter((h) => !h.archived).length;
+  const atHabitLimit =
+    user?.billing?.limits.maxHabits != null &&
+    activeCount >= user.billing.limits.maxHabits;
+
+  const openCreate = () => {
+    if (atHabitLimit) {
+      setPaywall(true);
+      return;
+    }
+    setEditing(null);
+    setCatalogDraft(null);
+    setFormOpen(true);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -160,14 +179,18 @@ export default function HabitsPage() {
       return;
     }
     if (params.get("create") === "1") {
-      setEditing(null);
-      setCatalogDraft(null);
-      setFormOpen(true);
+      if (atHabitLimit) {
+        setPaywall(true);
+      } else {
+        setEditing(null);
+        setCatalogDraft(null);
+        setFormOpen(true);
+      }
     }
     if (params.get("catalog") === "1") {
       setCatalogOpen(true);
     }
-  }, [habits]);
+  }, [habits, atHabitLimit]);
 
   const handleCreateOrUpdate = async (
 
@@ -295,9 +318,15 @@ export default function HabitsPage() {
 
       clearDirty(cacheKeys.habits);
 
-    } catch {
+    } catch (error) {
 
       if (previous) setCachedData(previous);
+
+      if (error instanceof ApiError && error.code === "PAYWALL") {
+        setPaywall(true);
+        toast.error(error.message);
+        return;
+      }
 
       toast.error("Could not create habit");
 
@@ -480,9 +509,9 @@ export default function HabitsPage() {
           </h1>
 
           <p className="mt-1 text-sm text-gray-60/80">
-
-            Customize, edit, and manage your routines.
-
+            {user?.billing?.limits.maxHabits != null
+              ? `${activeCount}/${user.billing.limits.maxHabits} free habits · core tracking stays unlimited in time`
+              : "Unlimited habits on your current plan."}
           </p>
 
         </div>
@@ -498,11 +527,7 @@ export default function HabitsPage() {
           </Button>
           <Button
             size="icon"
-            onClick={() => {
-              setEditing(null);
-              setCatalogDraft(null);
-              setFormOpen(true);
-            }}
+            onClick={openCreate}
             aria-label="Add habit"
           >
             <Plus className="h-5 w-5" />
@@ -593,6 +618,10 @@ export default function HabitsPage() {
           void _id;
           void _c;
           void _d;
+          if (atHabitLimit) {
+            setPaywall(true);
+            return;
+          }
           setCatalogDraft(draft);
           setEditing(null);
           setFormOpen(true);
@@ -620,6 +649,12 @@ export default function HabitsPage() {
 
         onSubmit={handleCreateOrUpdate}
 
+      />
+
+      <PaywallDialog
+        open={paywall}
+        onOpenChange={setPaywall}
+        feature="unlimitedHabits"
       />
 
     </div>

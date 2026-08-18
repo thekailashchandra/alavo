@@ -1,21 +1,25 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Award,
   Flame,
+  Sparkles,
   Target,
   Trophy,
 } from "lucide-react";
 import { Heatmap } from "@/components/analytics/heatmap";
 import { HabitProgressList } from "@/components/analytics/habit-progress-list";
 import { StatsCharts } from "@/components/analytics/stats-charts";
+import { PaywallDialog } from "@/components/billing/paywall-dialog";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useCachedQuery } from "@/hooks/use-cached-query";
 import { cacheKeys } from "@/lib/client-cache";
 import { type AnalyticsApiResponse } from "@/lib/api-client";
 import { getTodayInTimezone, rateToStatus } from "@/lib/habits";
 import { statusTextClass } from "@/lib/status";
+import type { FeatureKey } from "@/lib/billing/entitlements";
+import { Button } from "@/components/ui/button";
 
 function StatCard({
   icon: Icon,
@@ -56,11 +60,18 @@ export default function AnalyticsPage() {
   const { user } = useAuth();
   const timezone = user?.timezone ?? "UTC";
   const todayDate = getTodayInTimezone(timezone);
+  const [paywall, setPaywall] = useState<FeatureKey | null>(null);
 
   const { data, loading } = useCachedQuery<AnalyticsApiResponse>(
     cacheKeys.analytics,
     "/api/analytics"
   );
+  const { data: coaching } = useCachedQuery<{
+    locked: boolean;
+    insights: { id: string; title: string; body: string; tone: string }[];
+  }>(cacheKeys.coaching, "/api/coaching");
+
+  const advanced = data?.advancedAnalytics ?? user?.billing?.features.advancedAnalytics ?? false;
 
   const heatmapCells = useMemo(
     () =>
@@ -107,7 +118,9 @@ export default function AnalyticsPage() {
           Analytics
         </h1>
         <p className="mt-1 text-sm text-gray-60/80">
-          Progress charts, streaks, and habit insights.
+          {advanced
+            ? "Progress charts, streaks, and habit insights."
+            : "Last 30 days of basic streaks. Longer ranges are Pro."}
         </p>
       </header>
 
@@ -170,7 +183,12 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="px-5">
-            <StatsCharts overall={data?.heatmaps.overall ?? []} todayDate={todayDate} />
+            <StatsCharts
+              overall={data?.heatmaps.overall ?? []}
+              todayDate={todayDate}
+              advanced={advanced}
+              onUnlock={() => setPaywall("advancedAnalytics")}
+            />
           </div>
 
           <div className="px-5">
@@ -188,7 +206,11 @@ export default function AnalyticsPage() {
               <h2 className="mb-1 text-sm font-semibold text-gray-100">
                 Overall activity
               </h2>
-              <p className="mb-4 text-xs text-gray-60">Combined habit completion heatmap</p>
+              <p className="mb-4 text-xs text-gray-60">
+                {advanced
+                  ? "Combined habit completion heatmap"
+                  : "Last 30 days — full history is a Pro unlock"}
+              </p>
               <Heatmap cells={heatmapCells} />
             </div>
           </div>
@@ -206,8 +228,48 @@ export default function AnalyticsPage() {
               </div>
             </div>
           )}
+
+          <div className="px-5">
+            <div className="rounded-2xl border border-gray-20 bg-white p-5 shadow-sm">
+              <div className="mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary-100" />
+                <h2 className="text-sm font-semibold text-gray-100">AI coaching</h2>
+              </div>
+              {coaching?.locked !== false ? (
+                <>
+                  <p className="text-sm text-gray-60">
+                    Personalized insights from your own stats — a-la-carte, even on Free.
+                  </p>
+                  <Button
+                    className="mt-3"
+                    variant="outline"
+                    onClick={() => setPaywall("aiCoaching")}
+                  >
+                    Unlock coaching
+                  </Button>
+                </>
+              ) : (
+                <ul className="space-y-3">
+                  {(coaching?.insights ?? []).map((insight) => (
+                    <li key={insight.id}>
+                      <p className="text-sm font-medium text-gray-100">{insight.title}</p>
+                      <p className="mt-1 text-xs text-gray-60">{insight.body}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </>
       )}
+
+      <PaywallDialog
+        open={paywall != null}
+        onOpenChange={(open) => {
+          if (!open) setPaywall(null);
+        }}
+        feature={paywall ?? "advancedAnalytics"}
+      />
     </div>
   );
 }

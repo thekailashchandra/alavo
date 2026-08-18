@@ -133,7 +133,9 @@ export default function SignupPage() {
       <div className="mb-10 space-y-3 pt-4">
         <BrandLogo priority className="max-w-[180px]" />
         <p className="text-sm text-muted-foreground">
-          Create an account to start tracking habits.
+          Create an account to start tracking habits. Every new account includes
+          14 days of Pro — unlimited habits and full analytics — then Free stays
+          forever for core tracking.
         </p>
       </div>
 

@@ -15,6 +15,12 @@ export function MarketingNav() {
         />
         <nav className="flex items-center gap-2 sm:gap-3">
           <Link
+            href="/pricing"
+            className="hidden rounded-full px-3 py-2 text-sm font-medium text-[var(--muted)] transition hover:text-[var(--foreground)] sm:inline-flex"
+          >
+            Pricing
+          </Link>
+          <Link
             href={`${appUrl}/login`}
             className="hidden rounded-full px-3 py-2 text-sm font-medium text-[var(--muted)] transition hover:text-[var(--foreground)] sm:inline-flex"
           >

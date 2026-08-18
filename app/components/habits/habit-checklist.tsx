@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Clock, Flame, MessageSquarePlus, Pencil } from "lucide-react";
+import { Check, CircleX, Clock, Flame, MessageSquarePlus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -143,15 +143,29 @@ export function HabitChecklist({
     }
   };
 
-  const handleSaveNote = () => {
+  const handleSaveNote = async (completed: boolean) => {
     if (!noteDialog) return;
     const { habit, note } = noteDialog;
     setNoteDialog(null);
     setTogglingId(habit.id);
-    setOptimistic((prev) => ({ ...prev, [habit.id]: true }));
-    void onToggle(habit.id, true, note.trim() || null).finally(() => {
+    setOptimistic((prev) => ({ ...prev, [habit.id]: completed }));
+
+    try {
+      await onToggle(
+        habit.id,
+        completed,
+        note.trim() || null,
+        habit.log?.subtasksDone
+      );
+    } catch {
+      setOptimistic((prev) => {
+        const copy = { ...prev };
+        delete copy[habit.id];
+        return copy;
+      });
+    } finally {
       setTogglingId(null);
-    });
+    }
   };
 
   if (loading) {
@@ -341,7 +355,8 @@ export function HabitChecklist({
           <DialogHeader>
             <DialogTitle>Add a note</DialogTitle>
             <DialogDescription>
-              Optional reflection for {noteDialog?.habit.name} on {date}.
+              Write a short reflection for {noteDialog?.habit.name} on {date},
+              then choose whether you completed it.
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -355,7 +370,23 @@ export function HabitChecklist({
             rows={4}
             maxLength={500}
           />
-          <Button onClick={() => void handleSaveNote()}>Save note</Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              onClick={() => void handleSaveNote(true)}
+            >
+              <Check className="h-4 w-4" />
+              Completed
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleSaveNote(false)}
+            >
+              <CircleX className="h-4 w-4" />
+              Couldn&apos;t complete
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

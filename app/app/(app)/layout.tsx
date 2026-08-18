@@ -6,6 +6,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { PrefetchProvider } from "@/components/providers/prefetch-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { ConsentGate } from "@/components/compliance/consent-gate";
+import { TrialBanner } from "@/components/billing/trial-banner";
 import type { PrivacyConsentRecord } from "@/lib/compliance/consent";
 import { parseAccountSettings } from "@/lib/account-settings";
 
@@ -52,6 +53,7 @@ export default function AppLayout({
   return (
     <AppShell>
       <PrefetchProvider />
+      <TrialBanner />
       {children}
       <ConsentGate
         privacyConsent={user.privacyConsent as PrivacyConsentRecord | null}

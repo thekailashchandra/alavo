@@ -21,6 +21,7 @@ import {
   type HabitWithLogs,
 } from "@/lib/habits";
 import { jsonOk, handleApiError } from "@/lib/api";
+import { getEntitlementSnapshot } from "@/lib/billing/access";
 
 function buildOverallHeatmap(
   habits: HabitWithLogs[],
@@ -100,10 +101,11 @@ const ANALYTICS_LOG_DAYS = 400;
 
 async function loadHabitsWithLogs(
   userId: string,
-  timezone: string
+  timezone: string,
+  lookbackDays = ANALYTICS_LOG_DAYS
 ): Promise<HabitWithLogs[]> {
   const today = getTodayInTimezone(timezone);
-  const lookback = format(subDays(parseISO(today), ANALYTICS_LOG_DAYS), "yyyy-MM-dd");
+  const lookback = format(subDays(parseISO(today), lookbackDays), "yyyy-MM-dd");
   return prisma.habit.findMany({
     where: { userId },
     include: {
@@ -122,7 +124,10 @@ export async function GET(req: NextRequest) {
 
     const timezone = user!.timezone;
     const today = getTodayInTimezone(timezone);
-    const habits = await loadHabitsWithLogs(user!.id, timezone);
+    const entitlements = await getEntitlementSnapshot(user!.id);
+    const historyDays = entitlements.limits.historyDays ?? ANALYTICS_LOG_DAYS;
+    const heatmapDays = entitlements.features.advancedAnalytics ? 119 : historyDays;
+    const habits = await loadHabitsWithLogs(user!.id, timezone, historyDays);
     const activeHabits = habits.filter((h) => !h.archived);
 
     const { start: weekStart, end: weekEnd } = getWeekRange(today, timezone);
@@ -137,11 +142,11 @@ export async function GET(req: NextRequest) {
     }));
 
     const heatmaps = {
-      overall: buildOverallHeatmap(habits, timezone),
+      overall: buildOverallHeatmap(habits, timezone, heatmapDays),
       byHabit: activeHabits.map((habit) => ({
         habitId: habit.id,
         name: habit.name,
-        days: buildHeatmap(habit, timezone),
+        days: buildHeatmap(habit, timezone, heatmapDays),
       })),
     };
 
@@ -172,6 +177,9 @@ export async function GET(req: NextRequest) {
       },
       bestDayOfWeek: bestDayOfWeek(habits, timezone),
       overallCompletionPercent: overall.rate,
+      historyDays,
+      advancedAnalytics: entitlements.features.advancedAnalytics,
+      coachingUnlocked: entitlements.features.aiCoaching,
     });
   } catch (error) {
     return handleApiError(error);

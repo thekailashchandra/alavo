@@ -26,8 +26,31 @@ export type AccountSettings = {
   language?: "en" | "hi";
   integrations?: {
     googleCalendar?: boolean;
-    fitnessTracker?: boolean;
   };
+};
+
+export type BillingSnapshot = {
+  plan: "FREE" | "PRO" | "TEAM";
+  displayPlan: string;
+  status: "free" | "trial" | "active" | "lifetime" | "expired";
+  trialEndsAt: string | null;
+  planExpiresAt: string | null;
+  lifetime: boolean;
+  features: {
+    unlimitedHabits: boolean;
+    advancedAnalytics: boolean;
+    fullHistory: boolean;
+    aiCoaching: boolean;
+    advancedExport: boolean;
+    customNotifications: boolean;
+    calendarSync: boolean;
+    teamGroups: boolean;
+  };
+  limits: {
+    maxHabits: number | null;
+    historyDays: number | null;
+  };
+  addons: string[];
 };
 
 export type User = {
@@ -40,6 +63,8 @@ export type User = {
   notificationSettings: NotificationSettings | null;
   accountSettings: AccountSettings | null;
   privacyConsent: Record<string, unknown> | null;
+  billing?: BillingSnapshot | null;
+  isAdmin?: boolean;
 };
 
 export type HabitSubtask = {
@@ -122,6 +147,9 @@ export type AnalyticsApiResponse = {
   };
   bestDayOfWeek: { dayName: string; completions: number };
   overallCompletionPercent: number;
+  historyDays?: number;
+  advancedAnalytics?: boolean;
+  coachingUnlocked?: boolean;
 };
 
 export type CreateHabitInput = {
@@ -154,7 +182,8 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public code?: string
+    public code?: string,
+    public feature?: string
   ) {
     super(message);
     this.name = "ApiError";
@@ -167,7 +196,8 @@ export async function parseJson<T>(res: Response): Promise<T> {
     throw new ApiError(
       (data as { error?: string }).error ?? "Request failed",
       res.status,
-      (data as { code?: string }).code
+      (data as { code?: string }).code,
+      (data as { feature?: string }).feature
     );
   }
   return data as T;

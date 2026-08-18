@@ -10,9 +10,12 @@ import {
   CreditCard,
   History,
   Settings2,
+  Shield,
   User,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
+import { userIsAdmin } from "@/lib/admin-emails";
 import { SettingsHubLink, SettingsSection } from "@/components/settings/settings-nav";
 import {
   displayNameFromEmail,
@@ -128,10 +131,27 @@ export default function SettingsHubPage() {
         <SettingsHubLink
           href="/settings/subscription"
           icon={CreditCard}
-          title="Subscription information"
-          description="Plan, billing, offers, and payment history"
+          title="Plans & billing"
+          description="Free forever, Pro, Team, lifetime, and add-ons"
+        />
+        <SettingsHubLink
+          href="/team"
+          icon={Users}
+          title="Team & family"
+          description="Shared groups, challenges, and leaderboard"
         />
       </SettingsSection>
+
+      {userIsAdmin(user) ? (
+        <SettingsSection title="Admin">
+          <SettingsHubLink
+            href="/admin"
+            icon={Shield}
+            title="Admin dashboard"
+            description="Users, revenue, coupons, complimentary access"
+          />
+        </SettingsSection>
+      ) : null}
 
       <SettingsSection title="Settings">
         <SettingsHubLink
@@ -144,7 +164,7 @@ export default function SettingsHubPage() {
           href="/settings/preferences#integrations"
           icon={Calendar}
           title="Integrations"
-          description="Calendars and fitness trackers"
+          description="Google Calendar sync"
         />
       </SettingsSection>
     </div>

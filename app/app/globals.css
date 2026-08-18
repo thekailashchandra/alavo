@@ -112,6 +112,32 @@
 
 * {
   border-color: var(--border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-80) var(--primary-20);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--primary-20);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary-80), var(--primary-100));
+  border-radius: 999px;
+  border: 2px solid var(--primary-20);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-120);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 html {
@@ -284,4 +310,19 @@ a,
 .brand-title {
   font-family: var(--font-display), Georgia, serif;
   letter-spacing: -0.03em;
+}
+
+.admin-shell {
+  min-height: 100svh;
+  min-height: 100dvh;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 3rem;
+}
+
+@media (min-width: 480px) {
+  .admin-shell {
+    height: calc(100dvh - 48px);
+    overflow-y: auto;
+  }
 }

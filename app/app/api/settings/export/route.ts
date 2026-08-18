@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
 import { DPDP_POLICY_VERSION } from "@alavo/brand";
+import { getEntitlementSnapshot } from "@/lib/billing/access";
 
 function escapeCsv(value: string | number | boolean | null | undefined) {
   if (value === null || value === undefined) return "";
@@ -175,6 +176,50 @@ function buildCsv(
   return sections.join("\n");
 }
 
+function buildHtmlReport(
+  data: Awaited<ReturnType<typeof loadExportData>>
+) {
+  const date = new Date().toISOString().slice(0, 10);
+  const rows = (data.habits ?? [])
+    .map((habit) => {
+      const logs = data.logs.filter((l) => l.habitId === habit.id && l.completed);
+      return `<tr><td>${escapeHtml(habit.name)}</td><td>${logs.length}</td><td>${habit.frequencyType}</td></tr>`;
+    })
+    .join("");
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Alavo habit report ${date}</title>
+  <style>
+    body { font-family: Georgia, serif; color: #1f1630; padding: 32px; }
+    h1 { font-size: 28px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+    th, td { border-bottom: 1px solid #e6e7f6; text-align: left; padding: 8px 0; }
+    .muted { color: #6b6f8c; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <p class="muted">Alavo · printable report</p>
+  <h1>Habit summary</h1>
+  <p class="muted">${escapeHtml(data.profile?.email ?? "")} · exported ${date}</p>
+  <table>
+    <thead><tr><th>Habit</th><th>Completions</th><th>Schedule</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <script>window.addEventListener("load", () => setTimeout(() => window.print(), 250));</script>
+</body>
+</html>`;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { user, error } = await requireAuth(req);
@@ -182,6 +227,17 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const format = searchParams.get("format") ?? "json";
+
+    if (format === "csv" || format === "html" || format === "pdf") {
+      const entitlements = await getEntitlementSnapshot(user!.id);
+      if (!entitlements.features.advancedExport) {
+        return jsonError(
+          "Formatted CSV and PDF reports are a paid add-on. JSON export stays free.",
+          402,
+          { code: "PAYWALL", feature: "advancedExport" }
+        );
+      }
+    }
 
     const data = await loadExportData(user!.id);
 
@@ -192,6 +248,15 @@ export async function GET(req: NextRequest) {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
           "Content-Disposition": `attachment; filename="alavo-export-${new Date().toISOString().slice(0, 10)}.csv"`,
+        },
+      });
+    }
+
+    if (format === "html" || format === "pdf") {
+      return new Response(buildHtmlReport(data), {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
         },
       });
     }
@@ -208,7 +273,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return jsonError('Invalid format. Use "json" or "csv".', 400);
+    return jsonError('Invalid format. Use "json", "csv", or "html".', 400);
   } catch (error) {
     return handleApiError(error);
   }

@@ -5,11 +5,12 @@ import { Bell, Droplets, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import { SettingsBackHeader } from "@/components/settings/settings-nav";
+import { PaywallDialog } from "@/components/billing/paywall-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { parseJson, type NotificationSettings } from "@/lib/api-client";
+import { parseJson, ApiError, type NotificationSettings } from "@/lib/api-client";
 
 const DEFAULT_SETTINGS: NotificationSettings = {
   enabled: false,
@@ -45,6 +46,7 @@ export default function NotificationsSettingsPage() {
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [paywall, setPaywall] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
 
   const loadPushStatus = useCallback(async () => {
@@ -88,8 +90,13 @@ export default function NotificationsSettingsPage() {
       if (json.user) setUser(json.user);
       setSettings(next);
       toast.success("Settings saved");
-    } catch {
-      toast.error("Could not save settings");
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "PAYWALL") {
+        setPaywall(true);
+        toast.error(error.message);
+      } else {
+        toast.error("Could not save settings");
+      }
     } finally {
       setSaving(false);
     }
@@ -230,12 +237,17 @@ export default function NotificationsSettingsPage() {
           <div className="flex items-center gap-2">
             <Droplets className="h-4 w-4 text-gray-60" />
             <p className="text-sm font-medium text-gray-100">Water reminder</p>
+            <p className="text-xs text-gray-60">Custom schedule — paid unlock</p>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-60">Enabled</span>
             <Switch
               checked={settings.waterReminder?.enabled ?? false}
               onCheckedChange={(enabled) => {
+                if (enabled && !user?.billing?.features.customNotifications) {
+                  setPaywall(true);
+                  return;
+                }
                 void saveSettings({
                   ...settings,
                   waterReminder: {
@@ -351,6 +363,11 @@ export default function NotificationsSettingsPage() {
           </div>
         </div>
       </section>
+      <PaywallDialog
+        open={paywall}
+        onOpenChange={setPaywall}
+        feature="customNotifications"
+      />
     </div>
   );
 }

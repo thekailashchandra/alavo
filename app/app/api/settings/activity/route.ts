@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
+import { format, parseISO, subDays } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { getTodayInTimezone } from "@/lib/habits";
 import { jsonOk, handleApiError } from "@/lib/api";
+import { logLookbackDays } from "@/lib/billing/access";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,6 +15,11 @@ export async function GET(req: NextRequest) {
     const filter = searchParams.get("filter") ?? "all";
     const limit = Math.min(Number(searchParams.get("limit") ?? 50), 100);
     const today = getTodayInTimezone(user!.timezone);
+    const historyDays = await logLookbackDays(user!.id, 400);
+    const historyStart = format(
+      subDays(parseISO(today), historyDays),
+      "yyyy-MM-dd"
+    );
 
     const habits = await prisma.habit.findMany({
       where: { userId: user!.id, archived: false },
@@ -23,6 +30,7 @@ export async function GET(req: NextRequest) {
     const logs = await prisma.habitLog.findMany({
       where: {
         habitId: { in: habits.map((h) => h.id) },
+        date: { gte: historyStart },
         ...(filter === "completed"
           ? { completed: true }
           : filter === "incomplete"
@@ -53,6 +61,7 @@ export async function GET(req: NextRequest) {
       where: {
         habitId: { in: habits.map((h) => h.id) },
         completed: true,
+        date: { gte: historyStart },
       },
     });
 
@@ -60,7 +69,7 @@ export async function GET(req: NextRequest) {
       where: {
         habitId: { in: habits.map((h) => h.id) },
         completed: false,
-        date: { lte: today },
+        date: { lte: today, gte: historyStart },
       },
     });
 

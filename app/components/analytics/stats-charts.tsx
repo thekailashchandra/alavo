@@ -92,11 +92,21 @@ function buildMonthlySeries(
 type StatsChartsProps = {
   overall: AnalyticsApiResponse["heatmaps"]["overall"];
   todayDate: string;
+  advanced?: boolean;
+  onUnlock?: () => void;
 };
 
-export function StatsCharts({ overall, todayDate }: StatsChartsProps) {
+export function StatsCharts({
+  overall,
+  todayDate,
+  advanced = true,
+  onUnlock,
+}: StatsChartsProps) {
   const [dailyRange, setDailyRange] = useState<ChartRange>("7d");
-  const [weeklyRange, setWeeklyRange] = useState<ChartRange>("26w");
+  const [weeklyRange, setWeeklyRange] = useState<ChartRange>(
+    advanced ? "26w" : "7d"
+  );
+  const locked: ChartRange[] = advanced ? [] : ["26w", "12m"];
 
   const dailyData = useMemo(() => {
     if (dailyRange === "7d") return buildDailySeries(overall, 7, todayDate);
@@ -123,7 +133,12 @@ export function StatsCharts({ overall, todayDate }: StatsChartsProps) {
             <h2 className="text-sm font-semibold text-gray-100">Daily goals</h2>
             <ChevronDown className="h-4 w-4 text-gray-30" />
           </div>
-          <ChartRangeTabs value={dailyRange} onChange={setDailyRange} />
+          <ChartRangeTabs
+            value={dailyRange}
+            onChange={setDailyRange}
+            locked={locked}
+            onLocked={onUnlock}
+          />
         </div>
         {dailyUsesArea ? (
           <ModernAreaChart
@@ -148,7 +163,12 @@ export function StatsCharts({ overall, todayDate }: StatsChartsProps) {
             <h2 className="text-sm font-semibold text-gray-100">Weekly goals</h2>
             <ChevronDown className="h-4 w-4 text-gray-30" />
           </div>
-          <ChartRangeTabs value={weeklyRange} onChange={setWeeklyRange} />
+          <ChartRangeTabs
+            value={weeklyRange}
+            onChange={setWeeklyRange}
+            locked={locked}
+            onLocked={onUnlock}
+          />
         </div>
         {weeklyUsesBars ? (
           <ModernPillBarChart

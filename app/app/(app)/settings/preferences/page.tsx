@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   Calendar,
   Download,
-  Dumbbell,
   Globe,
   Mail,
   Palette,
@@ -32,8 +31,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { PaywallDialog } from "@/components/billing/paywall-dialog";
 import { parseAccountSettings } from "@/lib/account-settings";
-import { parseJson, type AccountSettings } from "@/lib/api-client";
+import { parseJson, ApiError, type AccountSettings } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 function applyTheme(theme: "indigo" | "light") {
@@ -48,6 +48,9 @@ export default function PreferencesSettingsPage() {
     parseAccountSettings(user?.accountSettings)
   );
   const [saving, setSaving] = useState(false);
+  const [paywall, setPaywall] = useState<"advancedExport" | "calendarSync" | null>(
+    null
+  );
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
 
@@ -81,29 +84,38 @@ export default function PreferencesSettingsPage() {
     }
   };
 
-  const toggleIntegration = (
-    key: "googleCalendar" | "fitnessTracker",
-    enabled: boolean
-  ) => {
+  const toggleIntegration = (enabled: boolean) => {
+    if (enabled && !user?.billing?.features.calendarSync) {
+      setPaywall("calendarSync");
+      return;
+    }
     if (enabled) {
       toast.message("Integration coming soon", {
-        description:
-          key === "googleCalendar"
-            ? "Google Calendar sync will be available in a future update."
-            : "Fitness tracker sync will be available in a future update.",
+        description: "Google Calendar sync will be available in a future update.",
       });
     }
     void saveAccount({
       integrations: {
         ...account.integrations,
-        [key]: enabled,
+        googleCalendar: enabled,
       },
     });
   };
 
-  const handleExport = async (format: "json" | "csv") => {
+  const handleExport = async (format: "json" | "csv" | "html") => {
+    if (format !== "json" && !user?.billing?.features.advancedExport) {
+      setPaywall("advancedExport");
+      return;
+    }
     try {
       const res = await fetchWithAuth(`/api/settings/export?format=${format}`);
+      if (format === "html") {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        toast.success("Opened printable PDF report");
+        return;
+      }
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -113,7 +125,11 @@ export default function PreferencesSettingsPage() {
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`Exported as ${format.toUpperCase()}`);
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "PAYWALL") {
+        setPaywall("advancedExport");
+        return;
+      }
       toast.error("Export failed");
     }
   };
@@ -246,23 +262,7 @@ export default function PreferencesSettingsPage() {
             </div>
             <Switch
               checked={account.integrations?.googleCalendar ?? false}
-              onCheckedChange={(v) => toggleIntegration("googleCalendar", v)}
-              disabled={saving}
-            />
-          </div>
-          <div className="flex items-center justify-between gap-3 border-t border-gray-10 pt-4">
-            <div className="flex items-start gap-3">
-              <Dumbbell className="mt-0.5 h-4 w-4 text-gray-60" />
-              <div>
-                <p className="text-sm font-medium text-gray-100">Fitness trackers</p>
-                <p className="text-xs text-gray-60">
-                  Connect wearables and fitness apps
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={account.integrations?.fitnessTracker ?? false}
-              onCheckedChange={(v) => toggleIntegration("fitnessTracker", v)}
+              onCheckedChange={(v) => toggleIntegration(v)}
               disabled={saving}
             />
           </div>
@@ -283,9 +283,19 @@ export default function PreferencesSettingsPage() {
             Export JSON
           </Button>
           <Button variant="outline" onClick={() => void handleExport("csv")}>
-            Export CSV
+            CSV report
+          </Button>
+          <Button
+            variant="outline"
+            className="col-span-2"
+            onClick={() => void handleExport("html")}
+          >
+            Printable PDF report
           </Button>
         </div>
+        <p className="text-xs text-gray-60">
+          JSON stays free for data rights. Formatted CSV/PDF is an add-on.
+        </p>
       </section>
 
       <section className="mt-8 border-t border-dashed border-gray-20 px-5 pt-8">
@@ -337,6 +347,14 @@ export default function PreferencesSettingsPage() {
           </AlertDialog>
         </div>
       </section>
+
+      <PaywallDialog
+        open={paywall != null}
+        onOpenChange={(open) => {
+          if (!open) setPaywall(null);
+        }}
+        feature={paywall ?? "advancedExport"}
+      />
     </div>
   );
 }

@@ -10,6 +10,9 @@ export const cacheKeys = {
   habits: "habits",
   journal: "journal",
   analytics: "analytics",
+  billing: "billing",
+  coaching: "coaching",
+  groups: "groups",
 } as const;
 
 function storageKey(key: string) {

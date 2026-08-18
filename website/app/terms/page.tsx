@@ -120,7 +120,23 @@ export default function TermsPage() {
         separate opt-in and may be disabled in Settings.
       </p>
 
-      <h2>8. Intermediary status and takedown</h2>
+      <h2>8. Paid plans, trials, and refunds</h2>
+      <p>
+        Core habit tracking remains available on the Free plan. Optional Pro,
+        Team, lifetime, and add-on purchases are processed in INR by Razorpay.
+        New accounts receive a 14-day Pro trial. Recurring Pro and Team access
+        sold via Payment Links grants a fixed period of access (a v1 billing
+        test before full subscription billing). Lifetime is a one-time unlock.
+      </p>
+      <p>
+        Because digital access is granted immediately after successful payment,
+        fees are generally non-refundable except where required by the Consumer
+        Protection Act, 2019 or Razorpay’s dispute process. Contact{" "}
+        <a href={`mailto:${LEGAL.supportEmail}`}>{LEGAL.supportEmail}</a> for
+        billing issues.
+      </p>
+
+      <h2>9. Intermediary status and takedown</h2>
       <p>
         To the extent {LEGAL.productName} qualifies as an intermediary under
         Section 79 of the IT Act, we provide a platform for User Content without
@@ -131,7 +147,7 @@ export default function TermsPage() {
         rules.
       </p>
 
-      <h2>9. Disclaimer and limitation of liability</h2>
+      <h2>10. Disclaimer and limitation of liability</h2>
       <p>
         The Service is provided on an “as is” and “as available” basis to the
         maximum extent permitted by law. We disclaim warranties of
@@ -149,7 +165,7 @@ export default function TermsPage() {
         applicable law.
       </p>
 
-      <h2>10. Termination</h2>
+      <h2>11. Termination</h2>
       <p>
         You may stop using the Service and delete your account at any time from
         Settings. We may suspend or terminate access if you materially breach
@@ -158,7 +174,7 @@ export default function TermsPage() {
         handling after account deletion is described in the Privacy Policy.
       </p>
 
-      <h2>11. Governing law and disputes</h2>
+      <h2>12. Governing law and disputes</h2>
       <p>
         These Terms are governed by the laws of India. Subject to applicable
         consumer protection law, courts at Bengaluru, Karnataka shall have
@@ -166,7 +182,7 @@ export default function TermsPage() {
         mandatory law provides otherwise.
       </p>
 
-      <h2>12. Changes</h2>
+      <h2>13. Changes</h2>
       <p>
         We may update these Terms. We will revise the version and “Last updated”
         date when we do. Continued use after material changes become effective
@@ -174,7 +190,7 @@ export default function TermsPage() {
         the DPDP Act.
       </p>
 
-      <h2>13. Contact</h2>
+      <h2>14. Contact</h2>
       <p>
         Questions about these Terms:{" "}
         <a href={`mailto:${LEGAL.supportEmail}`}>{LEGAL.supportEmail}</a>

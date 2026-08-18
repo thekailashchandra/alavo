@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { updateHabitSchema } from "@/lib/validations";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
+import { getEntitlementSnapshot } from "@/lib/billing/access";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -22,6 +23,22 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     const body = await req.json();
     const data = updateHabitSchema.parse(body);
+
+    if (data.archived === false && existing.archived) {
+      const entitlements = await getEntitlementSnapshot(user!.id);
+      if (entitlements.limits.maxHabits != null) {
+        const activeCount = await prisma.habit.count({
+          where: { userId: user!.id, archived: false },
+        });
+        if (activeCount >= entitlements.limits.maxHabits) {
+          return jsonError(
+            `Free accounts can track up to ${entitlements.limits.maxHabits} active habits. Upgrade to restore this habit.`,
+            402,
+            { code: "PAYWALL", feature: "unlimitedHabits" }
+          );
+        }
+      }
+    }
 
     const habit = await prisma.habit.update({
       where: { id },

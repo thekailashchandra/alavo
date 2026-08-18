@@ -3,6 +3,7 @@ import { getAuthUser, publicUser, USER_SELECT } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
 import { enforceRateLimit } from "@/lib/with-rate-limit";
+import { getEntitlementSnapshot } from "@/lib/billing/access";
 import { z } from "zod";
 
 const timezoneSchema = z.string().min(1).max(64);
@@ -26,10 +27,16 @@ export async function GET(req: NextRequest) {
         data: { timezone },
         select: USER_SELECT,
       });
-      return jsonOk(publicUser(updated));
+      return jsonOk({
+        ...publicUser(updated),
+        billing: await getEntitlementSnapshot(updated.id),
+      });
     }
 
-    return jsonOk(publicUser(user));
+    return jsonOk({
+      ...publicUser(user),
+      billing: await getEntitlementSnapshot(user.id),
+    });
   } catch (error) {
     return handleApiError(error);
   }

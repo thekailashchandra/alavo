@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { createHabitSchema } from "@/lib/validations";
-import { jsonOk, handleApiError } from "@/lib/api";
+import { jsonOk, jsonError, handleApiError } from "@/lib/api";
+import { getEntitlementSnapshot } from "@/lib/billing/access";
 
 export async function GET(req: NextRequest) {
   try {
@@ -37,6 +38,21 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const data = createHabitSchema.parse(body);
+
+    const activeCount = await prisma.habit.count({
+      where: { userId: user!.id, archived: false },
+    });
+    const entitlements = await getEntitlementSnapshot(user!.id);
+    if (
+      entitlements.limits.maxHabits != null &&
+      activeCount >= entitlements.limits.maxHabits
+    ) {
+      return jsonError(
+        `Free accounts can track up to ${entitlements.limits.maxHabits} active habits. Upgrade for unlimited habits.`,
+        402,
+        { code: "PAYWALL", feature: "unlimitedHabits" }
+      );
+    }
 
     const maxSort = await prisma.habit.aggregate({
       where: { userId: user!.id },

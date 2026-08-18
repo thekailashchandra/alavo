@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { trialWindow } from "@/lib/billing/entitlements";
+import { isSuperAdminEmail } from "@/lib/admin-emails";
 
 export type AppUser = {
   id: string;
@@ -40,6 +42,7 @@ export function publicUser(user: AppUser) {
     notificationSettings: user.notificationSettings ?? null,
     accountSettings: user.accountSettings ?? null,
     privacyConsent: user.privacyConsent ?? null,
+    isAdmin: isSuperAdminEmail(user.email),
   };
 }
 
@@ -92,6 +95,7 @@ async function ensureAppUser(sessionUser: {
       emailVerified: verifiedAt,
       passwordHash: null,
       provider,
+      ...trialWindow(),
     },
     select: USER_SELECT,
   });

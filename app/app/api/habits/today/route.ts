@@ -12,6 +12,7 @@ import {
   type HabitWithLogs,
 } from "@/lib/habits";
 import { jsonOk, handleApiError } from "@/lib/api";
+import { logLookbackDays } from "@/lib/billing/access";
 
 const LOG_LOOKBACK_DAYS = 400;
 
@@ -23,7 +24,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get("date");
     const date = dateParam ?? getTodayInTimezone(user!.timezone);
-    const lookback = format(subDays(parseISO(date), LOG_LOOKBACK_DAYS), "yyyy-MM-dd");
+    const lookbackDays = await logLookbackDays(user!.id, LOG_LOOKBACK_DAYS);
+    const lookback = format(subDays(parseISO(date), lookbackDays), "yyyy-MM-dd");
 
     const habits: HabitWithLogs[] = await prisma.habit.findMany({
       where: { userId: user!.id, archived: false },

@@ -34,4 +34,9 @@ export const DATA_PROCESSORS = [
     purpose: "Optional habit summary emails you enable in Settings",
     data: "Email address and report content",
   },
+  {
+    name: "Razorpay",
+    purpose: "Optional paid upgrades (Pro, Team, lifetime, and add-ons)",
+    data: "Email, payment identifiers, and amount when you choose to pay",
+  },
 ] as const;

@@ -11,6 +11,9 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
+          <Link href="/pricing" className="transition hover:text-[var(--foreground)]">
+            Pricing
+          </Link>
           <Link href="/privacy" className="transition hover:text-[var(--foreground)]">
             Privacy
           </Link>

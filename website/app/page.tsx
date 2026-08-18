@@ -5,6 +5,7 @@ import { HeroMockup } from "@/components/home/hero-mockup";
 import { HighlightsSection } from "@/components/home/highlights-section";
 import { HowItWorksSection } from "@/components/home/how-it-works";
 import { MarketingNav } from "@/components/home/marketing-nav";
+import { PricingSection } from "@/components/home/pricing";
 import { ProofStrip } from "@/components/home/proof-strip";
 import { SiteFooter } from "@/components/home/site-footer";
 import { TrustBadge } from "@/components/home/trust-badge";
@@ -33,7 +34,7 @@ export default function HomePage() {
       <div className="relative mx-auto max-w-6xl px-6 md:px-10">
         <section className="grid items-center gap-12 py-12 md:grid-cols-[1.05fr_0.95fr] md:gap-10 md:py-16 lg:py-20">
           <div className="hero-copy flex flex-col gap-6 md:max-w-xl">
-            <span className="section-label w-fit">Free · Mobile-first · PWA</span>
+            <span className="section-label w-fit">Free forever · 14-day Pro trial · PWA</span>
 
             <div className="space-y-4">
               <h1 className="brand-title text-4xl font-semibold leading-[1.05] tracking-tight text-[var(--foreground)] sm:text-5xl lg:text-6xl">
@@ -85,6 +86,7 @@ export default function HomePage() {
       <ProofStrip />
       <HowItWorksSection />
       <FeaturesSection />
+      <PricingSection />
       <HighlightsSection />
       <ClosingCta />
       <SiteFooter />

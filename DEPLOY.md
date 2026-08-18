@@ -40,6 +40,11 @@ VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 VAPID_SUBJECT_EMAIL=mailto:hi@alavo.cc
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+# Optional extra admin emails; alavoapp@gmail.com is always super admin
+# SUPER_ADMIN_EMAILS=
 ```
 
 ### Domain

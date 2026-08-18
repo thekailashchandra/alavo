@@ -13,6 +13,40 @@ enum AuthProvider {
   GOOGLE
 }
 
+enum PlanCode {
+  FREE
+  PRO
+  TEAM
+}
+
+enum BillingSku {
+  PRO_MONTHLY
+  PRO_YEARLY
+  LIFETIME
+  TEAM_MONTHLY
+  ADDON_AI_COACHING
+  ADDON_EXPORT
+  ADDON_NOTIFICATIONS
+}
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  EXPIRED
+}
+
+enum GroupRole {
+  OWNER
+  MEMBER
+}
+
+enum CouponKind {
+  PERCENT
+  AMOUNT
+  GRANT
+}
+
 enum HabitFrequencyType {
   DAILY
   WEEKDAYS
@@ -33,10 +67,20 @@ model User {
   notificationSettings Json?
   accountSettings      Json?
   privacyConsent       Json?
+  trialStartedAt       DateTime?
+  trialEndsAt          DateTime?
+  plan                 PlanCode           @default(FREE)
+  planExpiresAt        DateTime?
+  lifetime             Boolean            @default(false)
   habits               Habit[]
   journalEntries       JournalEntry[]
   pushSubscriptions    PushSubscription[]
   emailVerifications   EmailVerification[]
+  addons               UserAddon[]
+  payments             Payment[]
+  ownedGroups          HabitGroup[]       @relation("GroupOwner")
+  groupMemberships     HabitGroupMember[]
+  couponRedemptions    CouponRedemption[]
 
   @@unique([provider, providerAccountId])
   @@index([email])
@@ -116,4 +160,119 @@ model PushSubscription {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model UserAddon {
+  id          String     @id @default(cuid())
+  userId      String
+  sku         BillingSku
+  purchasedAt DateTime   @default(now())
+  expiresAt   DateTime?
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sku])
+  @@index([userId])
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  userId                String
+  sku                   BillingSku
+  amountPaise           Int
+  currency              String        @default("INR")
+  status                PaymentStatus @default(CREATED)
+  razorpayPaymentLinkId String?       @unique
+  razorpayPaymentId     String?       @unique
+  razorpayOrderId       String?
+  couponId              String?
+  paidAt                DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon                Coupon?       @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  redemption            CouponRedemption?
+
+  @@index([userId, createdAt])
+  @@index([couponId])
+}
+
+model Coupon {
+  id              String             @id @default(cuid())
+  code            String             @unique
+  kind            CouponKind
+  percentOff      Int?
+  amountOffPaise  Int?
+  grantSku        BillingSku?
+  maxRedemptions  Int?
+  expiresAt       DateTime?
+  active          Boolean            @default(true)
+  note            String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  redemptions     CouponRedemption[]
+  payments        Payment[]
+}
+
+model CouponRedemption {
+  id        String   @id @default(cuid())
+  couponId  String
+  userId    String
+  paymentId String?  @unique
+  createdAt DateTime @default(now())
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([couponId, userId])
+  @@index([userId])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  actorEmail  String
+  action      String
+  targetEmail String?
+  detail      Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model HabitGroup {
+  id         String              @id @default(cuid())
+  name       String
+  ownerId    String
+  inviteCode String              @unique
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  owner      User                @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members    HabitGroupMember[]
+  challenges HabitGroupChallenge[]
+
+  @@index([ownerId])
+}
+
+model HabitGroupMember {
+  id       String     @id @default(cuid())
+  groupId  String
+  userId   String
+  role     GroupRole  @default(MEMBER)
+  joinedAt DateTime   @default(now())
+  group    HabitGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model HabitGroupChallenge {
+  id        String     @id @default(cuid())
+  groupId   String
+  name      String
+  startDate String
+  endDate   String
+  createdAt DateTime   @default(now())
+  group     HabitGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, createdAt])
 }
