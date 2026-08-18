@@ -30,6 +30,9 @@ export async function POST(req: NextRequest) {
 
     const { sku, couponCode } = checkoutSchema.parse(await req.json());
     if (!isSku(sku)) return jsonError("Unknown plan", 400);
+    if (sku.startsWith("ADDON_")) {
+      return jsonError("This add-on is not available right now.", 400);
+    }
 
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
       /\/$/,

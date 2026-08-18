@@ -232,7 +232,7 @@ export async function GET(req: NextRequest) {
       const entitlements = await getEntitlementSnapshot(user!.id);
       if (!entitlements.features.advancedExport) {
         return jsonError(
-          "Formatted CSV and PDF reports are a paid add-on. JSON export stays free.",
+          "Formatted CSV and PDF reports are included with Pro. JSON export stays free.",
           402,
           { code: "PAYWALL", feature: "advancedExport" }
         );

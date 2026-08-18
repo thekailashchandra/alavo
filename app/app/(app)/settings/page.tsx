@@ -132,7 +132,7 @@ export default function SettingsHubPage() {
           href="/settings/subscription"
           icon={CreditCard}
           title="Plans & billing"
-          description="Free forever, Pro, Team, lifetime, and add-ons"
+          description="Free forever, Pro, Team, and lifetime"
         />
         <SettingsHubLink
           href="/team"

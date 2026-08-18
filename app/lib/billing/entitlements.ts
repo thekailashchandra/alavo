@@ -98,10 +98,10 @@ export function resolveEntitlements(
     unlimitedHabits: pro,
     advancedAnalytics: pro,
     fullHistory: pro,
-    aiCoaching: addonActive(input.addons, "ADDON_AI_COACHING", now),
-    advancedExport: addonActive(input.addons, "ADDON_EXPORT", now),
-    customNotifications: addonActive(input.addons, "ADDON_NOTIFICATIONS", now),
-    calendarSync: addonActive(input.addons, "ADDON_NOTIFICATIONS", now),
+    aiCoaching: pro || addonActive(input.addons, "ADDON_AI_COACHING", now),
+    advancedExport: pro || addonActive(input.addons, "ADDON_EXPORT", now),
+    customNotifications: pro || addonActive(input.addons, "ADDON_NOTIFICATIONS", now),
+    calendarSync: pro || addonActive(input.addons, "ADDON_NOTIFICATIONS", now),
     teamGroups: effective === "TEAM",
   };
 
@@ -149,12 +149,8 @@ export function accessUntil(sku: BillingSku, from: Date) {
 
 export function recommendedSkuForFeature(feature: FeatureKey): BillingSku {
   if (feature === "teamGroups") return "TEAM_MONTHLY";
-  if (feature === "aiCoaching") return "ADDON_AI_COACHING";
-  if (feature === "advancedExport") return "ADDON_EXPORT";
-  if (feature === "customNotifications" || feature === "calendarSync") {
-    return "ADDON_NOTIFICATIONS";
-  }
-  return "LIFETIME";
+  if (feature === "unlimitedHabits") return "LIFETIME";
+  return "PRO_MONTHLY";
 }
 
 export function featureLabel(feature: FeatureKey) {

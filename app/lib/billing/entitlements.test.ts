@@ -47,6 +47,8 @@ describe("resolveEntitlements", () => {
     expect(snap.displayPlan).toBe("Pro trial");
     expect(snap.features.unlimitedHabits).toBe(true);
     expect(snap.features.advancedAnalytics).toBe(true);
+    expect(snap.features.aiCoaching).toBe(true);
+    expect(snap.features.advancedExport).toBe(true);
     expect(snap.features.teamGroups).toBe(false);
   });
 
@@ -132,8 +134,9 @@ describe("trialWindow", () => {
 });
 
 describe("recommendedSkuForFeature", () => {
-  it("maps power features to a-la-carte SKUs", () => {
-    expect(recommendedSkuForFeature("aiCoaching")).toBe("ADDON_AI_COACHING");
+  it("maps power features to Pro or Team, not add-ons", () => {
+    expect(recommendedSkuForFeature("aiCoaching")).toBe("PRO_MONTHLY");
+    expect(recommendedSkuForFeature("advancedExport")).toBe("PRO_MONTHLY");
     expect(recommendedSkuForFeature("teamGroups")).toBe("TEAM_MONTHLY");
     expect(recommendedSkuForFeature("unlimitedHabits")).toBe("LIFETIME");
   });

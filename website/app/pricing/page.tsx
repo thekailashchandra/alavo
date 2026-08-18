@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/home/site-footer";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Alavo is free for core habit tracking. Pro, Team, lifetime, and a-la-carte add-ons unlock extra depth.",
+    "Alavo is free for core habit tracking. Pro, Team, and lifetime unlock extra depth.",
 };
 
 export default function PricingPage() {

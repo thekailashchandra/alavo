@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
               {coaching?.locked !== false ? (
                 <>
                   <p className="text-sm text-gray-60">
-                    Personalized insights from your own stats — a-la-carte, even on Free.
+                    Personalized insights from your own stats — included with Pro.
                   </p>
                   <Button
                     className="mt-3"

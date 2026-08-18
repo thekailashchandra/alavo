@@ -211,6 +211,22 @@ export function getTimezone() {
   }
 }
 
+export function formatTimezoneLabel(timeZone: string) {
+  try {
+    const offset =
+      new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        timeZoneName: "shortOffset",
+      })
+        .formatToParts(new Date())
+        .find((part) => part.type === "timeZoneName")?.value ?? "";
+    const city = timeZone.split("/").pop()?.replace(/_/g, " ") ?? timeZone;
+    return offset ? `${city} · ${offset}` : city;
+  } catch {
+    return timeZone;
+  }
+}
+
 export const OFFLINE_QUEUE_KEY = "alavo_offline_logs";
 
 export type OfflineLogMutation = HabitLogInput & { queuedAt: string };

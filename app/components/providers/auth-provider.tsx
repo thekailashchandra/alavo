@@ -52,7 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadMe = useCallback(async () => {
-    const requestMe = () => fetch("/api/auth/me", { credentials: "include" });
+    const headers = { "x-timezone": getTimezone() };
+    const requestMe = () =>
+      fetch("/api/auth/me", { credentials: "include", headers });
     let res = await requestMe();
 
     if (res.status === 401) {
@@ -82,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchWithAuth = useCallback(
     async (input: RequestInfo | URL, init: RequestInit = {}) => {
       const headers = new Headers(init.headers);
+      headers.set("x-timezone", getTimezone());
       let res = await fetch(input, {
         ...init,
         headers,

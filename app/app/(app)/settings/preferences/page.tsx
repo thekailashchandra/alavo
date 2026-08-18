@@ -294,7 +294,7 @@ export default function PreferencesSettingsPage() {
           </Button>
         </div>
         <p className="text-xs text-gray-60">
-          JSON stays free for data rights. Formatted CSV/PDF is an add-on.
+          JSON stays free for data rights. Formatted CSV/PDF is included with Pro.
         </p>
       </section>
 

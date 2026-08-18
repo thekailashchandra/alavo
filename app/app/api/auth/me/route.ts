@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getAuthUser, publicUser, USER_SELECT } from "@/lib/auth";
+import { getAuthUser, publicUser, rememberAuthUser, USER_SELECT } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
 import { enforceRateLimit } from "@/lib/with-rate-limit";
@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
         data: { timezone },
         select: USER_SELECT,
       });
+      rememberAuthUser(updated);
       return jsonOk({
         ...publicUser(updated),
         billing: await getEntitlementSnapshot(updated.id),

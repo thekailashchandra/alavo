@@ -157,6 +157,11 @@ export async function getAuthUser(): Promise<AppUser | null> {
   return user;
 }
 
+export function rememberAuthUser(user: AppUser) {
+  if (!authMemo) return;
+  authMemo = { ...authMemo, user };
+}
+
 export async function requireAuth(_req?: Request) {
   const user = await getAuthUser();
   if (!user) {

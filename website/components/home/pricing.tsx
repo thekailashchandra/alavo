@@ -12,12 +12,6 @@ const appUrl = (
   process.env.NEXT_PUBLIC_PRODUCT_URL || "https://app.alavo.cc"
 ).replace(/\/$/, "");
 
-const ADDONS = [
-  BILLING_CATALOG.ADDON_AI_COACHING,
-  BILLING_CATALOG.ADDON_EXPORT,
-  BILLING_CATALOG.ADDON_NOTIFICATIONS,
-] as const;
-
 export function PricingSection() {
   return (
     <section id="pricing" className="px-6 py-12 md:px-10 md:py-16">
@@ -29,7 +23,7 @@ export function PricingSection() {
         <p className="mt-3 max-w-2xl text-base text-[var(--muted)]">
           Every new account gets {TRIAL_DAYS} days of Pro. After that, Free stays
           forever for up to 5 habits, basic streaks, and 30-day history. Pay only
-          if you want analytics, teams, or power features.
+          if you want analytics, unlimited habits, or teams.
         </p>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -91,22 +85,6 @@ export function PricingSection() {
               ))}
             </ul>
           </article>
-        </div>
-
-        <div className="mt-8 rounded-[1.35rem] border border-[var(--alavo-gray-20)] bg-white/70 p-6">
-          <h3 className="text-lg font-semibold">A-la-carte add-ons</h3>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Stay on Free and buy only the power features you want.
-          </p>
-          <ul className="mt-4 grid gap-3 md:grid-cols-3">
-            {ADDONS.map((addon) => (
-              <li key={addon.sku} className="rounded-xl border border-[var(--alavo-gray-20)] p-4">
-                <p className="font-medium">{addon.name}</p>
-                <p className="mt-1 text-sm text-[var(--muted)]">{addon.tagline}</p>
-                <p className="mt-2 text-sm font-semibold">{formatInr(addon.amountInr)} once</p>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <div className="mt-8 flex flex-wrap gap-3">

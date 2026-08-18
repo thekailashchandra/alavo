@@ -250,44 +250,6 @@ export default function SubscriptionSettingsPage() {
 
       <section className="space-y-3 px-5">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-60">
-          A-la-carte add-ons
-        </h2>
-        <p className="text-xs text-gray-60">
-          Keep Free forever and buy only the power features you want.
-        </p>
-        {(
-          [
-            "ADDON_AI_COACHING",
-            "ADDON_EXPORT",
-            "ADDON_NOTIFICATIONS",
-          ] as const
-        ).map((sku) => {
-          const item = BILLING_CATALOG[sku];
-          const owned = billing?.addons.includes(sku);
-          return (
-            <div
-              key={sku}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-gray-20 bg-white p-4"
-            >
-              <div>
-                <p className="text-sm font-medium text-gray-100">{item.name}</p>
-                <p className="text-xs text-gray-60">{item.tagline}</p>
-              </div>
-              <Button
-                size="sm"
-                variant={owned ? "ghost" : "outline"}
-                disabled={owned || pendingSku != null}
-                onClick={() => void checkout(sku)}
-              >
-                {owned ? "Unlocked" : formatInr(item.amountInr)}
-              </Button>
-            </div>
-          );
-        })}
-      </section>
-
-      <section className="space-y-3 px-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-60">
           Promotional offers
         </h2>
         <div className="rounded-2xl border border-dashed border-primary-30 bg-white p-5">

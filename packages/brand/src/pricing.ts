@@ -109,6 +109,7 @@ export const PRO_FEATURES = [
   "Unlimited habits",
   "Full history (not capped at 30 days)",
   "Advanced stats, charts, and heatmaps",
+  "AI coaching, formatted export, and custom alerts",
   "14-day Pro trial on every new account",
 ] as const;
 

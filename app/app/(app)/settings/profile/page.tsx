@@ -14,7 +14,7 @@ import {
   parseAccountSettings,
   userInitials,
 } from "@/lib/account-settings";
-import { parseJson, type AccountSettings } from "@/lib/api-client";
+import { parseJson, getTimezone, formatTimezoneLabel, type AccountSettings } from "@/lib/api-client";
 
 export default function ProfileSettingsPage() {
   const { user, fetchWithAuth, logout, setUser } = useAuth();
@@ -178,7 +178,11 @@ export default function ProfileSettingsPage() {
             <div className="space-y-1">
               <Label>Timezone</Label>
               <p className="rounded-xl border border-gray-10 bg-primary-20/40 px-3 py-2 text-sm text-primary-120">
-                {user?.timezone}
+                {formatTimezoneLabel(user?.timezone || getTimezone())}
+              </p>
+              <p className="text-xs text-gray-60">
+                Detected automatically from this device
+                {user?.timezone ? ` · ${user.timezone.replace(/_/g, " ")}` : ""}.
               </p>
             </div>
             <div className="space-y-1">
