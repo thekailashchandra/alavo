@@ -43,11 +43,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+.vercel-deploy-ids.json
 
-# typescript
 *.tsbuildinfo
 next-env.d.ts
-
-.vercel-deploy-ids.json
-.vercel
-
