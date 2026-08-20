@@ -360,7 +360,7 @@ export function mergeBillingSettings(raw: unknown): BillingSettings {
   const defaults = defaultBillingSettings();
   if (!raw || typeof raw !== "object") return defaults;
   const incoming = raw as Partial<BillingSettings>;
-  const markets = incoming.markets ?? {};
+  const markets: Partial<BillingSettings["markets"]> = incoming.markets ?? {};
 
   for (const market of BILLING_MARKETS) {
     const fallback = defaults.markets[market];
