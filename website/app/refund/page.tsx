@@ -19,10 +19,11 @@ export default function RefundPage() {
 
       <h2>1. How billing works</h2>
       <p>
-        Alavo offers optional paid plans — Pro monthly, Pro yearly, Team
-        monthly, and a one-time Lifetime unlock — processed in INR via Razorpay
-        Payment Links. Each payment grants a fixed period of access. There is no
-        automatic recurring charge; you choose to renew when your plan period ends.
+        Alavo offers optional paid plans — Pro monthly, Pro yearly, and a
+        one-time Lifetime unlock — processed via Razorpay Payment Links in INR
+        for India and USD for other countries. Each payment grants a fixed
+        period of access. There is no automatic recurring charge; you choose to
+        renew when your plan period ends.
       </p>
 
       <h2>2. Digital access and non-refundability</h2>

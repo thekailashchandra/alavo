@@ -122,11 +122,12 @@ export default function TermsPage() {
 
       <h2>8. Paid plans, trials, and refunds</h2>
       <p>
-        Core habit tracking remains available on the Free plan. Optional Pro,
-        Team, lifetime, and add-on purchases are processed in INR by Razorpay.
-        New accounts receive a 14-day Pro trial. Recurring Pro and Team access
-        sold via Payment Links grants a fixed period of access (a v1 billing
-        test before full subscription billing). Lifetime is a one-time unlock.
+        Core habit tracking remains available on the Free plan. Optional Pro
+        monthly, Pro yearly, lifetime, and add-on purchases are processed by
+        Razorpay in INR for customers in India and in USD elsewhere. New
+        accounts receive a 14-day Pro trial. Recurring Pro access sold via
+        Payment Links grants a fixed period of access (a v1 billing test before
+        full subscription billing). Lifetime is a one-time unlock.
       </p>
       <p>
         Because digital access is granted immediately after successful payment,

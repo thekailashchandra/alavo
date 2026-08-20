@@ -1,5 +1,5 @@
 import { format, parseISO } from "date-fns";
-import { BILLING_CATALOG, formatInr, type BillingSku } from "@alavo/brand";
+import { BILLING_CATALOG, formatMinorUnits, type BillingSku } from "@alavo/brand";
 
 export type ReceiptInput = {
   userEmail: string;
@@ -41,6 +41,13 @@ function escapeHtml(value: string) {
     .replace(/"/g, "&quot;");
 }
 
+function formatReceiptAmount(input: ReceiptInput) {
+  return formatMinorUnits(
+    input.amountPaise,
+    input.currency === "USD" ? "USD" : "INR"
+  );
+}
+
 function row(label: string, value: string) {
   return `
     <tr>
@@ -52,7 +59,7 @@ function row(label: string, value: string) {
 export function renderUserReceiptHtml(input: ReceiptInput) {
   const item = BILLING_CATALOG[input.sku];
   const invoice = receiptNumber(input.paymentId, input.paidAt);
-  const amount = formatInr(input.amountPaise / 100);
+  const amount = formatReceiptAmount(input);
   const validity = validityLabel(input);
   const sourceNote =
     input.source === "coupon"
@@ -95,7 +102,7 @@ export function renderUserReceiptHtml(input: ReceiptInput) {
 export function renderAdminSaleHtml(input: ReceiptInput) {
   const item = BILLING_CATALOG[input.sku];
   const invoice = receiptNumber(input.paymentId, input.paidAt);
-  const amount = formatInr(input.amountPaise / 100);
+  const amount = formatReceiptAmount(input);
 
   return `
   <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111827;">

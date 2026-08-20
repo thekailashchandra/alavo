@@ -117,11 +117,11 @@ export function FeaturesSection() {
             id="features-heading"
             className="mt-4 text-3xl font-semibold tracking-tight text-[var(--foreground)] md:text-4xl"
           >
-            Everything in the app, nothing you don&apos;t need
+            Everything in a free habit tracker, nothing you don&apos;t need
           </h2>
           <p className="mt-3 text-base text-[var(--muted)]">
-            The same purple UI you use in the product—on web, mobile, and as a
-            PWA.
+            A Today home, streak tracking, heatmaps, and a journal — on web,
+            mobile, and as a PWA.
           </p>
         </div>
 

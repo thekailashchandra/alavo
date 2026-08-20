@@ -13,8 +13,11 @@ function allowedOrigins(): Set<string> {
   }
 
   origins.add("https://app.alavo.cc");
+  origins.add("https://alavo.cc");
+  origins.add("https://www.alavo.cc");
   origins.add("https://alavo-app.vercel.app");
   origins.add("http://localhost:3000");
+  origins.add("http://localhost:3001");
 
   return origins;
 }

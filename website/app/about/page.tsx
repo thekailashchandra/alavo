@@ -3,12 +3,12 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site-shell";
 
 export const metadata: Metadata = {
-  title: "Alavo",
+  title: "About Alavo — Free Habit Tracker",
   description:
-    "Alavo is a habit tracking app for building daily routines, keeping streaks, and reflecting in a simple journal.",
-  applicationName: "Alavo",
+    "Alavo is a free habit tracking app for daily routines, streak tracking, heatmaps, and a simple journal.",
+  alternates: { canonical: "https://alavo.cc/about" },
   openGraph: {
-    title: "Alavo",
+    title: "About Alavo",
     siteName: "Alavo",
     description:
       "Alavo is a habit tracking app for daily routines, streaks, and journaling.",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <SiteShell title="Alavo">
+    <SiteShell title="Alavo" eyebrow="About">
       <p>
         <strong>Alavo</strong> is a habit tracking web app. The purpose of Alavo
         is to help people build consistent daily habits, track streaks, and
@@ -27,9 +27,15 @@ export default function AboutPage() {
 
       <h2>What Alavo does</h2>
       <ul>
-        <li>Create and organize personal habits</li>
-        <li>Mark habits complete each day</li>
-        <li>Track streaks and consistency over time</li>
+        <li>
+          Create and organize personal habits in a{" "}
+          <Link href="/">free habit tracker</Link>
+        </li>
+        <li>Mark habits complete each day on the Today screen</li>
+        <li>
+          Track streaks, heatmaps, and consistency — see{" "}
+          <Link href="/insights/streak-tracking">why consistency beats perfection</Link>
+        </li>
         <li>Write short journal reflections</li>
         <li>Sign in with email or Google to use your Alavo account</li>
       </ul>

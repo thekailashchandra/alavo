@@ -2,12 +2,6 @@
 
 import { useEffect } from "react";
 
-function isLocalDevHost() {
-  if (typeof window === "undefined") return false;
-  const host = window.location.hostname;
-  return host === "localhost" || host === "127.0.0.1" || host === "[::1]";
-}
-
 async function clearPwaCaches() {
   if (!("caches" in window)) return;
   const keys = await caches.keys();
@@ -28,8 +22,8 @@ export function ServiceWorkerRegister() {
 
     (async () => {
       try {
-        // Service workers break Next.js dev (HMR, navigations). Never use them on localhost.
-        if (process.env.NODE_ENV !== "production" || isLocalDevHost()) {
+        // Service workers break Next.js HMR. Skip them in `next dev` only.
+        if (process.env.NODE_ENV !== "production") {
           await unregisterServiceWorkers();
           await clearPwaCaches();
           return;

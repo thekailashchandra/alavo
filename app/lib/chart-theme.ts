@@ -14,6 +14,10 @@ export const CHART = {
   tooltipBorder: "#E6E7F6",
 } as const;
 
+export function chartColors(_theme?: string | null) {
+  return CHART;
+}
+
 export type ChartRange = "7d" | "31d" | "26w" | "12m";
 
 export const CHART_RANGES: { id: ChartRange; label: string }[] = [

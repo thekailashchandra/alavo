@@ -36,7 +36,7 @@ export const DATA_PROCESSORS = [
   },
   {
     name: "Razorpay",
-    purpose: "Optional paid upgrades (Pro, Team, lifetime, and add-ons)",
+    purpose: "Optional paid upgrades (Pro monthly, Pro yearly, lifetime, and add-ons)",
     data: "Email, payment identifiers, and amount when you choose to pay",
   },
 ] as const;

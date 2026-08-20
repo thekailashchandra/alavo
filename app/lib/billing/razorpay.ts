@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { BILLING_CATALOG, type BillingSku } from "@alavo/brand";
+import { BILLING_CATALOG, type BillingCurrency, type BillingSku } from "@alavo/brand";
 
 const RAZORPAY_API = "https://api.razorpay.com/v1";
 
@@ -34,9 +34,12 @@ export async function createPaymentLink(input: {
   email: string;
   callbackUrl: string;
   amountPaise?: number;
+  currency?: BillingCurrency;
+  name?: string;
 }): Promise<PaymentLinkResult> {
   const { keyId, keySecret } = requireKeys();
   const item = BILLING_CATALOG[input.sku];
+  const currency = input.currency ?? "INR";
   const amountPaise = input.amountPaise ?? item.amountInr * 100;
 
   const res = await fetch(`${RAZORPAY_API}/payment_links`, {
@@ -47,10 +50,10 @@ export async function createPaymentLink(input: {
     },
     body: JSON.stringify({
       amount: amountPaise,
-      currency: "INR",
+      currency,
       accept_partial: false,
       reference_id: input.paymentId.slice(0, 40),
-      description: `Alavo ${item.name}`,
+      description: `Alavo ${input.name ?? item.name}`,
       customer: { email: input.email },
       notify: { email: true, sms: false },
       reminder_enable: false,

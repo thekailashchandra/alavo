@@ -4,9 +4,10 @@ import { MarketingNav } from "@/components/home/marketing-nav";
 import { SiteFooter } from "@/components/home/site-footer";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Pricing — Free Habit Tracker Plans",
   description:
-    "Alavo is free for core habit tracking. Pro, Team, and lifetime unlock extra depth.",
+    "Alavo is a free habit tracker for core tracking. Pro monthly, yearly, and lifetime unlock unlimited habits, full history, and analytics.",
+  alternates: { canonical: "https://alavo.cc/pricing" },
 };
 
 export default function PricingPage() {

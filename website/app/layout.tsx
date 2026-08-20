@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import { CookieConsent } from "@/components/cookie-consent";
+import { JsonLd } from "@/components/json-ld";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -9,29 +11,40 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Alavo",
+    default: DEFAULT_TITLE,
     template: "%s · Alavo",
   },
-  description:
-    "Build habits that actually stick. Alavo is a purple-themed habit tracker with week rings, streaks, analytics, and a simple journal.",
+  description: DEFAULT_DESCRIPTION,
   applicationName: "Alavo",
   keywords: [
     "Alavo",
-    "habit tracker",
-    "habits",
-    "streaks",
-    "daily habits",
+    "free habit tracker",
+    "habit tracker online",
+    "daily habit tracker",
+    "streak tracking",
+    "habit heatmap",
     "journal",
   ],
-  authors: [{ name: "Alavo", url: "https://alavo.cc" }],
+  authors: [{ name: "Alavo", url: SITE_URL }],
   openGraph: {
-    title: "Alavo",
-    description:
-      "Build habits that actually stick — week rings, streaks, analytics, and a calm purple UI.",
-    url: "https://alavo.cc",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
     siteName: "Alavo",
     type: "website",
+    locale: "en_IN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
   icons: {
     icon: [{ url: "/Logo.png", type: "image/png" }],
@@ -59,6 +72,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.variable} antialiased`}>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Alavo",
+            url: SITE_URL,
+            description: DEFAULT_DESCRIPTION,
+            publisher: {
+              "@type": "Organization",
+              name: "Alavo",
+              url: SITE_URL,
+            },
+          }}
+        />
         <CookieConsent />
         {children}
       </body>

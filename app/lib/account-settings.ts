@@ -1,7 +1,9 @@
+import { isUiTheme, type UiTheme } from "@alavo/brand";
+
 export type AccountSettings = {
   displayName?: string;
   avatarDataUrl?: string;
-  theme?: "indigo" | "light";
+  theme?: UiTheme;
   language?: "en" | "hi";
   integrations?: {
     googleCalendar?: boolean;
@@ -22,6 +24,7 @@ export function parseAccountSettings(raw: unknown): AccountSettings {
   return {
     ...DEFAULT_ACCOUNT_SETTINGS,
     ...value,
+    theme: isUiTheme(value.theme) ? value.theme : DEFAULT_ACCOUNT_SETTINGS.theme,
     integrations: {
       ...DEFAULT_ACCOUNT_SETTINGS.integrations,
       ...value.integrations,

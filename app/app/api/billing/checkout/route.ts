@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { BILLING_CATALOG, BILLING_SKUS, type BillingSku } from "@alavo/brand";
+import { BILLING_SKUS, type BillingSku } from "@alavo/brand";
 import { requireAuth } from "@/lib/auth";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
 import { enforceRateLimit } from "@/lib/with-rate-limit";
 import { prisma } from "@/lib/prisma";
-import { applyPaidSku, amountPaiseForSku } from "@/lib/billing/apply-purchase";
+import { applyPaidSku } from "@/lib/billing/apply-purchase";
 import { isSku } from "@/lib/billing/entitlements";
 import {
   createPaymentLink,
@@ -15,10 +15,13 @@ import { discountedAmountPaise, grantSkuForCoupon } from "@/lib/billing/coupons"
 import { loadRedeemableCoupon, recordCouponRedemption } from "@/lib/billing/redeem";
 import { getEntitlementSnapshot } from "@/lib/billing/access";
 import { notifySubscription } from "@/lib/billing/notify";
+import { currencyFromRequest } from "@/lib/billing/market";
+import { amountMinorForLiveSku, getLivePackage } from "@/lib/billing/catalog";
 
 const checkoutSchema = z.object({
   sku: z.enum(BILLING_SKUS as unknown as [BillingSku, ...BillingSku[]]),
   couponCode: z.string().max(24).optional(),
+  market: z.enum(["IN", "INTL"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,10 +32,14 @@ export async function POST(req: NextRequest) {
     const { user, error } = await requireAuth(req);
     if (error) return error;
 
-    const { sku, couponCode } = checkoutSchema.parse(await req.json());
+    const { sku, couponCode, market } = checkoutSchema.parse(await req.json());
     if (!isSku(sku)) return jsonError("Unknown plan", 400);
-    if (sku.startsWith("ADDON_")) {
-      return jsonError("This add-on is not available right now.", 400);
+
+    const currency = currencyFromRequest(req, market);
+    const billedMarket = currency === "USD" ? "INTL" : "IN";
+    const livePackage = await getLivePackage(sku, billedMarket);
+    if (!livePackage?.enabled) {
+      return jsonError("This plan is not available in your region.", 400);
     }
 
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
@@ -41,7 +48,7 @@ export async function POST(req: NextRequest) {
     );
 
     let couponId: string | null = null;
-    let amountPaise = amountPaiseForSku(sku);
+    let amountPaise = await amountMinorForLiveSku(sku, billedMarket);
     let grantNow: BillingSku | null = null;
 
     if (couponCode?.trim()) {
@@ -113,7 +120,7 @@ export async function POST(req: NextRequest) {
         userId: user!.id,
         sku,
         amountPaise,
-        currency: "INR",
+        currency,
         status: "CREATED",
         couponId,
       },
@@ -126,6 +133,8 @@ export async function POST(req: NextRequest) {
       email: user!.email,
       callbackUrl: `${appUrl}/settings/subscription`,
       amountPaise,
+      currency,
+      name: livePackage.name,
     });
 
     await prisma.payment.update({
@@ -137,7 +146,9 @@ export async function POST(req: NextRequest) {
       url: link.shortUrl,
       paymentId: payment.id,
       amountInr: amountPaise / 100,
-      listAmountInr: BILLING_CATALOG[sku].amountInr,
+      amount: amountPaise / 100,
+      currency,
+      listAmount: livePackage.amount,
     });
   } catch (error) {
     return handleApiError(error);

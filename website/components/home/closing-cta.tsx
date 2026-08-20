@@ -13,8 +13,8 @@ export function ClosingCta() {
           Your calmer habit tracker is one tap away
         </h2>
         <p className="mx-auto mt-3 max-w-lg text-base text-[var(--muted)]">
-          Create a free account — 14 days of Pro included — then keep core
-          tracking forever.
+          Create a free account — 14 days of Pro included — then keep this free
+          habit tracker for core tracking forever.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link href={`${appUrl}/signup`} className="btn-primary h-12 px-7 text-base">

@@ -30,7 +30,7 @@ function AlertDialogContent({
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-[398px] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border bg-white p-5 shadow-xl",
+          "fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-[398px] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border bg-card p-5 shadow-xl",
           className
         )}
         {...props}

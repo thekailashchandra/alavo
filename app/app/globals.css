@@ -176,6 +176,21 @@ a,
   position: relative;
 }
 
+.desktop-topbar {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .desktop-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem 0.15rem;
+    flex-shrink: 0;
+  }
+}
+
 .app-content {
   padding-bottom: calc(var(--app-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
 }
@@ -208,10 +223,10 @@ a,
   padding: 0.2rem;
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--primary-100) 18%, transparent);
-  background: rgba(255, 255, 255, 0.92);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
   box-shadow:
     0 4px 20px color-mix(in srgb, var(--primary-100) 12%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    inset 0 1px 0 color-mix(in srgb, var(--card) 80%, transparent);
 }
 
 .bottom-nav-indicator {
@@ -261,6 +276,20 @@ a,
   bottom: calc(var(--app-nav-height) + 1rem + env(safe-area-inset-bottom, 0px));
 }
 
+.pwa-install-banner {
+  position: fixed;
+  left: 50%;
+  z-index: 70;
+  width: calc(100% - 1.5rem);
+  max-width: 406px;
+  transform: translateX(-50%);
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.pwa-install-banner[data-above-nav="true"] {
+  bottom: calc(var(--app-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+}
+
 @media (min-width: 480px) {
   html,
   body {
@@ -304,6 +333,14 @@ a,
 
   .today-add-fab {
     bottom: calc(24px + var(--app-nav-height) + 0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pwa-install-banner {
+    bottom: calc(24px + 1rem);
+  }
+
+  .pwa-install-banner[data-above-nav="true"] {
+    bottom: calc(24px + var(--app-nav-height) + 0.75rem);
   }
 }
 

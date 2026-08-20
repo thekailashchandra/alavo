@@ -9,6 +9,7 @@ import { ConsentGate } from "@/components/compliance/consent-gate";
 import { TrialBanner } from "@/components/billing/trial-banner";
 import type { PrivacyConsentRecord } from "@/lib/compliance/consent";
 import { parseAccountSettings } from "@/lib/account-settings";
+import { useTheme } from "@/components/providers/theme-provider";
 
 export default function AppLayout({
   children,
@@ -17,6 +18,7 @@ export default function AppLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     if (loading) return;
@@ -31,8 +33,8 @@ export default function AppLayout({
 
   useEffect(() => {
     const theme = parseAccountSettings(user?.accountSettings).theme ?? "indigo";
-    document.documentElement.dataset.theme = theme;
-  }, [user?.accountSettings]);
+    setTheme(theme);
+  }, [user?.accountSettings, setTheme]);
 
   if (loading && !user) {
     return (

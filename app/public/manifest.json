@@ -1,9 +1,9 @@
 {
-  "id": "/",
+  "id": "/?source=pwa",
   "name": "Alavo",
   "short_name": "Alavo",
   "description": "Track habits, build streaks, and reflect daily.",
-  "start_url": "/today",
+  "start_url": "/today?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

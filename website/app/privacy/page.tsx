@@ -70,9 +70,10 @@ export default function PrivacyPage() {
           Analytics is loaded only after cookie consent.
         </li>
         <li>
-          <strong>Payment data</strong> — if you buy Pro, Team, lifetime, or an
-          add-on, Razorpay processes the payment. We store payment identifiers,
-          SKU, amount, and status — not your full card number.
+          <strong>Payment data</strong> — if you buy Pro monthly, Pro yearly,
+          lifetime, or an add-on, Razorpay processes the payment. We store
+          payment identifiers, SKU, amount, and status — not your full card
+          number.
         </li>
       </ul>
       <p>We do not sell or rent your personal data.</p>

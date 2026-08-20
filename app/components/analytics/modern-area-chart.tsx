@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CHART, type ChartDataPoint } from "@/lib/chart-theme";
+import { chartColors, type ChartDataPoint } from "@/lib/chart-theme";
 
 function AreaTooltip({
   active,
@@ -22,12 +22,13 @@ function AreaTooltip({
 }) {
   if (!active || !payload?.[0]) return null;
   const data = payload[0].payload;
+  const colors = chartColors();
   return (
     <div
       className="rounded-xl border px-3 py-2 text-xs shadow-lg"
       style={{
-        backgroundColor: CHART.tooltipBg,
-        borderColor: CHART.tooltipBorder,
+        backgroundColor: colors.tooltipBg,
+        borderColor: colors.tooltipBorder,
       }}
     >
       <p className="font-semibold text-gray-100">{data.label}</p>
@@ -48,6 +49,7 @@ export function ModernAreaChart({
   subtitle?: string;
 }) {
   const gradientId = useId().replace(/:/g, "");
+  const CHART = chartColors();
   const todayPoint = data.find((d) => d.isToday);
 
   if (data.length === 0) {

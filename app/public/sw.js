@@ -1,4 +1,4 @@
-const CACHE_NAME = "alavo-v4";
+const CACHE_NAME = "alavo-v5";
 const PRECACHE = [
   "/manifest.json",
   "/icon-192.png",
@@ -33,24 +33,19 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  if (isLocalDevHost(self.location.hostname)) {
-    event.waitUntil(
-      (async () => {
+  event.waitUntil(
+    (async () => {
+      if (isLocalDevHost(self.location.hostname)) {
         const keys = await caches.keys();
         await Promise.all(keys.map((key) => caches.delete(key)));
-        await self.registration.unregister();
-      })()
-    );
-    return;
-  }
+        await self.clients.claim();
+        return;
+      }
 
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
-      )
-      .then(() => self.clients.claim())
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+      await self.clients.claim();
+    })()
   );
 });
 

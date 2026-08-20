@@ -35,22 +35,24 @@ import { PaywallDialog } from "@/components/billing/paywall-dialog";
 import { parseAccountSettings } from "@/lib/account-settings";
 import { parseJson, ApiError, type AccountSettings } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/theme-provider";
+import type { UiTheme } from "@alavo/brand";
 
-function applyTheme(theme: "indigo" | "light") {
+function applyTheme(theme: UiTheme) {
   document.documentElement.dataset.theme = theme;
+  document.documentElement.classList.remove("dark");
 }
 
 export default function PreferencesSettingsPage() {
   const { user, fetchWithAuth, logout, setUser } = useAuth();
   const router = useRouter();
+  const { setTheme } = useTheme();
 
   const [account, setAccount] = useState<AccountSettings>(
     parseAccountSettings(user?.accountSettings)
   );
   const [saving, setSaving] = useState(false);
-  const [paywall, setPaywall] = useState<"advancedExport" | "calendarSync" | null>(
-    null
-  );
+  const [paywall, setPaywall] = useState<"advancedExport" | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
 
@@ -58,7 +60,8 @@ export default function PreferencesSettingsPage() {
     const parsed = parseAccountSettings(user?.accountSettings);
     setAccount(parsed);
     applyTheme(parsed.theme ?? "indigo");
-  }, [user]);
+    setTheme(parsed.theme ?? "indigo");
+  }, [user, setTheme]);
 
   const saveAccount = async (patch: Partial<AccountSettings>) => {
     setSaving(true);
@@ -75,31 +78,16 @@ export default function PreferencesSettingsPage() {
       const next = parseAccountSettings(json.accountSettings);
       setAccount(next);
       if (json.user) setUser(json.user);
-      if (patch.theme) applyTheme(patch.theme);
+      if (patch.theme) {
+        applyTheme(patch.theme);
+        setTheme(patch.theme);
+      }
       toast.success("Preferences saved");
     } catch {
       toast.error("Could not save preferences");
     } finally {
       setSaving(false);
     }
-  };
-
-  const toggleIntegration = (enabled: boolean) => {
-    if (enabled && !user?.billing?.features.calendarSync) {
-      setPaywall("calendarSync");
-      return;
-    }
-    if (enabled) {
-      toast.message("Integration coming soon", {
-        description: "Google Calendar sync will be available in a future update.",
-      });
-    }
-    void saveAccount({
-      integrations: {
-        ...account.integrations,
-        googleCalendar: enabled,
-      },
-    });
   };
 
   const handleExport = async (format: "json" | "csv" | "html") => {
@@ -249,22 +237,23 @@ export default function PreferencesSettingsPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-60">
           Integration with other apps
         </h2>
-        <div className="rounded-2xl border border-gray-20 bg-white p-4 space-y-4">
+        <div className="pointer-events-none select-none rounded-2xl border border-gray-20 bg-white p-4 opacity-60">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <Calendar className="mt-0.5 h-4 w-4 text-gray-60" />
               <div>
-                <p className="text-sm font-medium text-gray-100">Calendars</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-100">Calendars</p>
+                  <span className="rounded-full bg-primary-20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-120">
+                    Coming soon
+                  </span>
+                </div>
                 <p className="text-xs text-gray-60">
-                  Sync habit times with Google Calendar
+                  Google Calendar sync is not available yet.
                 </p>
               </div>
             </div>
-            <Switch
-              checked={account.integrations?.googleCalendar ?? false}
-              onCheckedChange={(v) => toggleIntegration(v)}
-              disabled={saving}
-            />
+            <Switch checked={false} disabled aria-label="Calendar sync coming soon" />
           </div>
         </div>
       </section>

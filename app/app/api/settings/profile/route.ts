@@ -2,9 +2,8 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, publicUser, USER_SELECT } from "@/lib/auth";
-import { jsonOk, jsonError, handleApiError } from "@/lib/api";
+import { jsonOk, handleApiError } from "@/lib/api";
 import { parseAccountSettings } from "@/lib/account-settings";
-import { getEntitlementSnapshot } from "@/lib/billing/access";
 
 const profileSchema = z.object({
   displayName: z.string().trim().min(1).max(80).optional(),
@@ -60,16 +59,10 @@ export async function PATCH(req: NextRequest) {
       },
     };
 
-    if (next.integrations?.googleCalendar) {
-      const entitlements = await getEntitlementSnapshot(user!.id);
-      if (!entitlements.features.calendarSync) {
-        return jsonError(
-          "Calendar sync is a paid unlock.",
-          402,
-          { code: "PAYWALL", feature: "calendarSync" }
-        );
-      }
-    }
+    next.integrations = {
+      ...next.integrations,
+      googleCalendar: false,
+    };
 
     if (body.avatarDataUrl === null) {
       delete next.avatarDataUrl;

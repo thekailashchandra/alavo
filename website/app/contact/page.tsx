@@ -5,7 +5,9 @@ import { SiteFooter } from "@/components/home/site-footer";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with the Alavo team.",
+  description:
+    "Contact Alavo for support, billing, privacy requests, or habit tracker questions.",
+  alternates: { canonical: "https://alavo.cc/contact" },
 };
 
 export default function ContactPage() {

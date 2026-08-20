@@ -12,10 +12,10 @@ import {
   Settings2,
   Shield,
   User,
-  Users,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { userIsAdmin } from "@/lib/admin-emails";
+import { PwaInstallCard } from "@/components/pwa-install-card";
 import { SettingsHubLink, SettingsSection } from "@/components/settings/settings-nav";
 import {
   displayNameFromEmail,
@@ -118,6 +118,10 @@ export default function SettingsHubPage() {
         />
       </SettingsSection>
 
+      <SettingsSection title="App">
+        <PwaInstallCard />
+      </SettingsSection>
+
       <SettingsSection title="Notifications">
         <SettingsHubLink
           href="/settings/notifications"
@@ -132,13 +136,7 @@ export default function SettingsHubPage() {
           href="/settings/subscription"
           icon={CreditCard}
           title="Plans & billing"
-          description="Free forever, Pro, Team, and lifetime"
-        />
-        <SettingsHubLink
-          href="/team"
-          icon={Users}
-          title="Team & family"
-          description="Shared groups, challenges, and leaderboard"
+          description="Free forever, monthly, yearly, and lifetime"
         />
       </SettingsSection>
 
@@ -164,7 +162,7 @@ export default function SettingsHubPage() {
           href="/settings/preferences#integrations"
           icon={Calendar}
           title="Integrations"
-          description="Google Calendar sync"
+          description="Coming soon"
         />
       </SettingsSection>
     </div>

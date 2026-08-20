@@ -54,6 +54,7 @@ export function clearLocalAppData() {
     }
     localStorage.removeItem("alavo_offline_logs");
     localStorage.removeItem("alavo_pwa_dismissed");
+    localStorage.removeItem("alavo_pwa_dismissed_at");
   } catch {
     // ignore storage errors
   }

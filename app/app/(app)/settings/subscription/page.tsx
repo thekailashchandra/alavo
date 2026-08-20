@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { differenceInCalendarDays, format } from "date-fns";
-import { Gift, History, Sparkles, Users } from "lucide-react";
+import { Gift, History, Sparkles } from "lucide-react";
 import {
-  BILLING_CATALOG,
-  FREE_TIER,
-  PRO_FEATURES,
-  TEAM_FEATURES,
-  formatInr,
+  formatMinorUnits,
+  formatMoney,
+  intervalSuffix,
   type BillingSku,
 } from "@alavo/brand";
 import { SettingsBackHeader } from "@/components/settings/settings-nav";
@@ -19,6 +16,8 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useCheckout } from "@/hooks/use-checkout";
 import { parseJson, type BillingSnapshot } from "@/lib/api-client";
 import { toast } from "sonner";
+import { useBillingMarket } from "@/hooks/use-billing-market";
+import { useLiveCatalog } from "@/hooks/use-live-catalog";
 
 type BillingResponse = {
   billing: BillingSnapshot;
@@ -27,6 +26,7 @@ type BillingResponse = {
     sku: BillingSku;
     name: string;
     amountInr: number;
+    currency?: string;
     paidAt: string | null;
     createdAt: string;
   }[];
@@ -54,8 +54,8 @@ function PlanCard({
     <div
       className={`rounded-2xl border p-4 ${
         highlight
-          ? "border-primary-100 bg-gradient-to-br from-primary-20 to-white"
-          : "border-gray-20 bg-white"
+          ? "border-primary-100 bg-gradient-to-br from-primary-20 to-card"
+          : "border-gray-20 bg-card"
       }`}
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-primary-100">
@@ -87,8 +87,11 @@ function PlanCard({
 export default function SubscriptionSettingsPage() {
   const { fetchWithAuth, refresh, user } = useAuth();
   const { checkout: startCheckout, pendingSku } = useCheckout();
+  const market = useBillingMarket();
+  const catalog = useLiveCatalog(market);
+  const currency = catalog.currency;
   const [couponCode, setCouponCode] = useState("");
-  const checkout = (sku: BillingSku) => startCheckout(sku, couponCode);
+  const checkout = (sku: BillingSku) => startCheckout(sku, couponCode, market);
   const [payload, setPayload] = useState<BillingResponse | null>(null);
 
   useEffect(() => {
@@ -179,80 +182,47 @@ export default function SubscriptionSettingsPage() {
       <section className="space-y-3 px-5">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-60">
           Plans
+          <span className="ml-2 font-medium normal-case tracking-normal">
+            {catalog.label}
+          </span>
         </h2>
         <PlanCard
-          title={FREE_TIER.name}
-          price="₹0"
-          hint={FREE_TIER.tagline}
-          features={FREE_TIER.features}
+          title={catalog.free.name}
+          price={formatMoney(0, currency)}
+          hint={catalog.free.tagline}
+          features={catalog.free.features}
         />
-        <PlanCard
-          title="Pro"
-          price={`${formatInr(BILLING_CATALOG.PRO_MONTHLY.amountInr)}/mo`}
-          hint="or ₹799/year · unlimited habits + analytics"
-          features={PRO_FEATURES}
-          highlight={billing?.plan === "PRO"}
-          pending={pendingSku === "PRO_MONTHLY" || pendingSku === "PRO_YEARLY"}
-          cta={{
-            label:
-              billing?.plan === "PRO" && billing.status !== "trial"
-                ? "Extend Pro"
-                : "Go Pro monthly",
-            onClick: () => void checkout("PRO_MONTHLY"),
-          }}
-        />
-        <Button
-          variant="outline"
-          className="w-full"
-          disabled={pendingSku != null}
-          onClick={() => void checkout("PRO_YEARLY")}
-        >
-          {pendingSku === "PRO_YEARLY"
-            ? "Redirecting…"
-            : `Pro yearly · ${formatInr(BILLING_CATALOG.PRO_YEARLY.amountInr)}`}
-        </Button>
-        <PlanCard
-          title="Lifetime unlock"
-          price={formatInr(BILLING_CATALOG.LIFETIME.amountInr)}
-          hint="One payment. Full Pro. No churn, no reminders."
-          features={["Everything in Pro", "Best for personal-use, India pricing"]}
-          highlight={billing?.lifetime}
-          pending={pendingSku === "LIFETIME"}
-          cta={
-            billing?.lifetime
-              ? undefined
-              : {
-                  label: "Pay once",
-                  onClick: () => void checkout("LIFETIME"),
-                }
-          }
-        />
-        <PlanCard
-          title="Team / Family"
-          price={`${formatInr(BILLING_CATALOG.TEAM_MONTHLY.amountInr)}/mo`}
-          hint="Up to 5 people · shared accountability"
-          features={TEAM_FEATURES}
-          highlight={billing?.plan === "TEAM"}
-          pending={pendingSku === "TEAM_MONTHLY"}
-          cta={{
-            label: "Start Team",
-            onClick: () => void checkout("TEAM_MONTHLY"),
-          }}
-        />
-        <Link
-          href="/team"
-          className="flex items-center justify-center gap-2 text-sm font-medium text-primary-100"
-        >
-          <Users className="h-4 w-4" />
-          Open team dashboard
-        </Link>
+        {catalog.packages.map((pkg) => (
+          <PlanCard
+            key={pkg.sku}
+            title={pkg.name}
+            price={`${formatMoney(pkg.amount, pkg.currency)}${intervalSuffix(pkg.interval)}`}
+            hint={pkg.hint}
+            features={pkg.features}
+            highlight={pkg.recommended || (pkg.sku === "LIFETIME" && billing?.lifetime)}
+            pending={pendingSku === pkg.sku}
+            cta={
+              pkg.sku === "LIFETIME" && billing?.lifetime
+                ? undefined
+                : {
+                    label:
+                      pkg.sku === "PRO_MONTHLY" &&
+                      billing?.plan === "PRO" &&
+                      billing.status !== "trial"
+                        ? `Extend ${pkg.name}`
+                        : `Choose ${pkg.name}`,
+                    onClick: () => void checkout(pkg.sku),
+                  }
+            }
+          />
+        ))}
       </section>
 
       <section className="space-y-3 px-5">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-60">
           Promotional offers
         </h2>
-        <div className="rounded-2xl border border-dashed border-primary-30 bg-white p-5">
+        <div className="rounded-2xl border border-dashed border-primary-30 bg-card p-5">
           <Gift className="mx-auto h-8 w-8 text-gray-30" />
           <p className="mt-2 text-center text-sm font-medium text-gray-100">
             {billing?.status === "trial"
@@ -303,7 +273,7 @@ export default function SubscriptionSettingsPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-60">
           Payment history
         </h2>
-        <div className="rounded-2xl border border-gray-20 bg-white p-5">
+        <div className="rounded-2xl border border-gray-20 bg-card p-5">
           {!payload?.payments.length ? (
             <div className="flex items-center gap-3 text-gray-60">
               <History className="h-5 w-5 shrink-0" />
@@ -322,7 +292,10 @@ export default function SubscriptionSettingsPage() {
                     </p>
                   </div>
                   <p className="text-sm font-semibold text-gray-100">
-                    {formatInr(payment.amountInr)}
+                    {formatMinorUnits(
+                      Math.round(payment.amountInr * 100),
+                      payment.currency === "USD" ? "USD" : "INR"
+                    )}
                   </p>
                 </li>
               ))}

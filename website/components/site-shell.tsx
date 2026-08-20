@@ -6,9 +6,11 @@ import { SiteFooter } from "@/components/home/site-footer";
 export function SiteShell({
   children,
   title,
+  eyebrow = "Legal",
 }: {
   children: ReactNode;
   title: string;
+  eyebrow?: string;
 }) {
   return (
     <main className="relative min-h-dvh overflow-hidden">
@@ -20,7 +22,7 @@ export function SiteShell({
       <MarketingNav />
 
       <article className="relative mx-auto max-w-3xl px-6 py-12 md:px-10 md:py-16">
-        <span className="section-label">Legal</span>
+        <span className="section-label">{eyebrow}</span>
         <h1 className="brand-title mt-4 text-3xl font-semibold tracking-tight text-[var(--foreground)] md:text-4xl">
           {title}
         </h1>

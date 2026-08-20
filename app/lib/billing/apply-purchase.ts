@@ -1,4 +1,4 @@
-import { BILLING_CATALOG, type BillingSku } from "@alavo/brand";
+import { amountMinorUnits, type BillingSku } from "@alavo/brand";
 import { prisma } from "@/lib/prisma";
 import { accessUntil } from "@/lib/billing/entitlements";
 import type { PlanCode } from "@prisma/client";
@@ -83,5 +83,5 @@ export async function setUserFree(userId: string) {
 }
 
 export function amountPaiseForSku(sku: BillingSku) {
-  return BILLING_CATALOG[sku].amountInr * 100;
+  return amountMinorUnits(sku, "INR");
 }

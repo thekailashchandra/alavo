@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { parseJson, type BillingSnapshot } from "@/lib/api-client";
+import { AdminPricingSettings } from "@/components/admin/pricing-settings";
 
 type Overview = {
   users: {
@@ -80,7 +81,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 
 export default function AdminPage() {
   const { fetchWithAuth } = useAuth();
-  const [tab, setTab] = useState<"overview" | "users" | "coupons" | "payments">(
+  const [tab, setTab] = useState<"overview" | "users" | "coupons" | "payments" | "pricing">(
     "overview"
   );
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -230,6 +231,7 @@ export default function AdminPage() {
   const tabs = [
     ["overview", "Overview"],
     ["users", "Users"],
+    ["pricing", "Pricing"],
     ["coupons", "Coupons"],
     ["payments", "Payments"],
   ] as const;
@@ -625,6 +627,8 @@ export default function AdminPage() {
           </table>
         </section>
       ) : null}
+
+      {tab === "pricing" ? <AdminPricingSettings /> : null}
     </div>
   );
 }

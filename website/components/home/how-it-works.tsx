@@ -32,7 +32,7 @@ export function HowItWorksSection() {
             id="how-heading"
             className="mt-4 text-3xl font-semibold tracking-tight text-[var(--foreground)] md:text-4xl"
           >
-            Three steps to a steadier routine
+            How to track habits daily in three steps
           </h2>
         </div>
 
