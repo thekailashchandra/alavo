@@ -19,12 +19,13 @@ import {
 } from "@/lib/auth/registration";
 import { passwordSchema } from "@/lib/validations";
 import { BrandLogo } from "@/components/brand-logo";
+import { ConsentRequiredDialog } from "@/components/auth/consent-required-dialog";
 import { RegistrationClosedNotice } from "@/components/auth/registration-closed-notice";
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 const PRIVACY_URL = `${LEGAL.websiteUrl}/privacy`;
 const TERMS_URL = `${LEGAL.websiteUrl}/terms`;
@@ -48,14 +49,20 @@ export default function SignupPage() {
   const registrationClosed = isRegistrationClosedClient();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [consentWarningOpen, setConsentWarningOpen] = useState(false);
 
-  const consentReady = ageConfirmed && termsAccepted;
+  const consentReady = consentAccepted;
 
   useEffect(() => {
     void getTimezone();
   }, []);
+
+  const requireConsent = () => {
+    if (consentReady) return true;
+    setConsentWarningOpen(true);
+    return false;
+  };
 
   const goToVerify = (email: string, message: string) => {
     toast.success(message);
@@ -68,10 +75,7 @@ export default function SignupPage() {
       toast.error(REGISTRATION_CLOSED_MESSAGE);
       return;
     }
-    if (!consentReady) {
-      toast.error("Please confirm your age and accept the Terms and Privacy Policy");
-      return;
-    }
+    if (!requireConsent()) return;
 
     const form = new FormData(e.currentTarget);
     const name = String(form.get("name") || "").trim();
@@ -145,14 +149,14 @@ export default function SignupPage() {
 
   if (registrationClosed) {
     return (
-      <div className="phone-shell flex min-h-[100dvh] flex-col px-6 py-10">
-        <div className="mb-10 space-y-3 pt-4">
-          <BrandLogo priority className="max-w-[180px]" />
+      <div className="phone-shell flex min-h-[100dvh] flex-col px-6 py-8">
+        <div className="mb-6 space-y-2 pt-2">
+          <BrandLogo priority className="max-w-[160px]" />
           <p className="text-sm text-muted-foreground">
             Alavo is not accepting new accounts right now.
           </p>
         </div>
-        <div className="flex flex-1 flex-col gap-5">
+        <div className="flex flex-1 flex-col gap-4">
           <RegistrationClosedNotice />
           <p className="text-center text-sm text-muted-foreground">
             Need help?{" "}
@@ -166,28 +170,27 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="phone-shell flex min-h-[100dvh] flex-col px-6 py-10">
-      <div className="mb-10 space-y-3 pt-4">
-        <BrandLogo priority className="max-w-[180px]" />
+    <div className="phone-shell flex min-h-[100dvh] flex-col px-6 py-8">
+      <div className="mb-6 space-y-1.5 pt-2">
+        <BrandLogo priority className="max-w-[160px]" />
         <p className="text-sm text-muted-foreground">
-          Create an account to start tracking habits. Every new account includes
-          14 days of Pro — unlimited habits and full analytics — then Free stays
-          forever for core tracking.
+          Create an account. 14 days of Pro included.
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col gap-5">
+      <div className="flex flex-1 flex-col gap-4">
         <SocialAuthButtons
           disabled={pending}
           consentReady={consentReady}
+          onConsentBlocked={() => setConsentWarningOpen(true)}
           labelPrefix="Continue"
         />
 
         <form
           onSubmit={(e) => void handleSubmit(e)}
-          className="flex flex-col gap-5"
+          className="flex flex-col gap-3.5"
         >
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
@@ -199,7 +202,7 @@ export default function SignupPage() {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -211,7 +214,7 @@ export default function SignupPage() {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
               <Input
@@ -237,53 +240,49 @@ export default function SignupPage() {
                 )}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              At least 8 characters with a letter, number, and symbol.
-            </p>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="signup-age"
-                checked={ageConfirmed}
-                onCheckedChange={(v) => setAgeConfirmed(v === true)}
-              />
-              <Label htmlFor="signup-age" className="text-sm leading-snug font-normal">
-                I am {LEGAL.minimumAge} years of age or older.
-              </Label>
-            </div>
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="signup-terms"
-                checked={termsAccepted}
-                onCheckedChange={(v) => setTermsAccepted(v === true)}
-              />
-              <Label htmlFor="signup-terms" className="text-sm leading-snug font-normal">
-                I agree to the{" "}
-                <Link
-                  href={TERMS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href={PRIVACY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Privacy Policy
-                </Link>
-                , including processing under the DPDP Act, 2023.
-              </Label>
-            </div>
-          </div>
+          <label
+            htmlFor="signup-consent"
+            className="mt-1 flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-white px-3 py-3 text-sm leading-snug"
+          >
+            <input
+              id="signup-consent"
+              type="checkbox"
+              checked={consentAccepted}
+              onChange={(e) => setConsentAccepted(e.target.checked)}
+              className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
+            />
+            <span>
+              I am {LEGAL.minimumAge}+ and agree to the{" "}
+              <Link
+                href={TERMS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link
+                href={PRIVACY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
 
-          <Button type="submit" className="mt-2 h-12 w-full" disabled={pending || !consentReady}>
+          <Button
+            type="submit"
+            className={cn("mt-1 h-11 w-full", !consentReady && "opacity-50")}
+            disabled={pending}
+            aria-disabled={!consentReady}
+          >
             {pending ? "Creating account…" : "Create account"}
           </Button>
 
@@ -295,6 +294,11 @@ export default function SignupPage() {
           </p>
         </form>
       </div>
+
+      <ConsentRequiredDialog
+        open={consentWarningOpen}
+        onOpenChange={setConsentWarningOpen}
+      />
     </div>
   );
 }

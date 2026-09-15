@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { oauthCallbackUrl } from "@/lib/auth/origin";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -32,16 +33,21 @@ function GoogleIcon({ className }: { className?: string }) {
 export function SocialAuthButtons({
   disabled = false,
   consentReady = true,
+  onConsentBlocked,
   labelPrefix = "Continue",
 }: {
   disabled?: boolean;
   consentReady?: boolean;
+  onConsentBlocked?: () => void;
   labelPrefix?: string;
 }) {
   const [loading, setLoading] = useState(false);
 
   const startGoogle = async () => {
-    if (!consentReady) return;
+    if (!consentReady) {
+      onConsentBlocked?.();
+      return;
+    }
     setLoading(true);
     try {
       const supabase = createClient();
@@ -72,15 +78,16 @@ export function SocialAuthButtons({
       <Button
         type="button"
         variant="outline"
-        className="h-12 w-full"
-        disabled={disabled || loading || !consentReady}
+        className={cn("h-11 w-full", !consentReady && "opacity-50")}
+        disabled={disabled || loading}
+        aria-disabled={!consentReady}
         onClick={() => void startGoogle()}
       >
         <GoogleIcon className="size-5" />
         {loading ? "Redirecting…" : `${labelPrefix} with Google`}
       </Button>
 
-      <div className="relative py-1">
+      <div className="relative py-0.5">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-border" />
         </div>
