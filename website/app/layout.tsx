@@ -1,9 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Outfit } from "next/font/google";
 import { CookieConsent } from "@/components/cookie-consent";
 import { JsonLd } from "@/components/json-ld";
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
+
+const UMAMI_SCRIPT_URL =
+  "https://umami-analytics-jspv.srv1293608.hstgr.cloud/script.js";
+const UMAMI_RECORDER_URL =
+  "https://umami-analytics-jspv.srv1293608.hstgr.cloud/recorder.js";
+const UMAMI_WEBSITE_ID = "ed325112-1759-4fcf-81b5-d84e10049591";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -71,6 +78,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          defer
+          src={UMAMI_SCRIPT_URL}
+          data-website-id={UMAMI_WEBSITE_ID}
+          strategy="afterInteractive"
+        />
+        <Script
+          defer
+          src={UMAMI_RECORDER_URL}
+          data-website-id={UMAMI_WEBSITE_ID}
+          strategy="afterInteractive"
+        />
+      </head>
       <body className={`${outfit.variable} antialiased`}>
         <JsonLd
           data={{
