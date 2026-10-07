@@ -21,13 +21,17 @@ async function findPayment(opts: {
       where: { razorpayPaymentLinkId: opts.paymentLinkId },
       include: paymentInclude,
     });
-    if (byLink && (!opts.userId || byLink.userId === opts.userId)) return byLink;
+    if (byLink) {
+      if (opts.userId && byLink.userId !== opts.userId) return null;
+      return byLink;
+    }
   }
   if (opts.notes?.paymentId) {
-    return prisma.payment.findUnique({
+    const byNote = await prisma.payment.findUnique({
       where: { id: opts.notes.paymentId },
       include: paymentInclude,
     });
+    if (byNote && (!opts.userId || byNote.userId === opts.userId)) return byNote;
   }
   if (opts.userId && opts.referenceId) {
     return prisma.payment.findFirst({
@@ -44,6 +48,15 @@ async function findPayment(opts: {
   return null;
 }
 
+/**
+ * The product is the SKU stored when checkout created the payment row.
+ * Webhook notes are not allowed to upgrade that SKU.
+ */
+export function fulfillmentSku(paymentSku: string, notes?: Record<string, string>) {
+  void notes;
+  return paymentSku;
+}
+
 export async function fulfillPaidPayment(opts: {
   paymentLinkId?: string;
   paymentId?: string;
@@ -56,27 +69,36 @@ export async function fulfillPaidPayment(opts: {
   if (!payment) return { ok: false as const, reason: "not-found" };
   if (payment.status === "PAID") return { ok: true as const, alreadyPaid: true };
 
-  const sku = (opts.notes?.sku || payment.sku) as string;
+  const sku = fulfillmentSku(payment.sku, opts.notes);
   if (!isSku(sku)) return { ok: false as const, reason: "unknown-sku" };
 
-  await applyPaidSku(payment.userId, sku as BillingSku);
   const paidAt = new Date();
-  await prisma.payment.update({
-    where: { id: payment.id },
-    data: {
-      status: "PAID",
-      razorpayPaymentId: opts.paymentId ?? payment.razorpayPaymentId,
-      razorpayOrderId: opts.orderId ?? payment.razorpayOrderId,
-      paidAt,
-    },
-  });
-  if (payment.couponId) {
-    await recordCouponRedemption({
-      couponId: payment.couponId,
-      userId: payment.userId,
-      paymentId: payment.id,
+  const claimed = await prisma.$transaction(async (tx) => {
+    const updated = await tx.payment.updateMany({
+      where: { id: payment.id, status: "CREATED" },
+      data: {
+        status: "PAID",
+        razorpayPaymentId: opts.paymentId ?? payment.razorpayPaymentId,
+        razorpayOrderId: opts.orderId ?? payment.razorpayOrderId,
+        paidAt,
+      },
     });
-  }
+    if (updated.count !== 1) return false;
+    await applyPaidSku(payment.userId, sku as BillingSku, tx);
+    if (payment.couponId) {
+      await recordCouponRedemption(
+        {
+          couponId: payment.couponId,
+          userId: payment.userId,
+          paymentId: payment.id,
+        },
+        tx
+      );
+    }
+    return true;
+  });
+
+  if (!claimed) return { ok: true as const, alreadyPaid: true };
 
   await notifySubscription({
     userId: payment.userId,

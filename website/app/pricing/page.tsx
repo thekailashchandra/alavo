@@ -4,9 +4,9 @@ import { MarketingNav } from "@/components/home/marketing-nav";
 import { SiteFooter } from "@/components/home/site-footer";
 
 export const metadata: Metadata = {
-  title: "Pricing — Free Habit Tracker Plans",
+  title: "Pricing — Self-host free, or use Alavo Cloud",
   description:
-    "Alavo is a free habit tracker for core tracking. Pro monthly, yearly, and lifetime unlock unlimited habits, full history, and analytics.",
+    "Self-host the open-source Alavo habit tracker for free. Alavo Cloud is paid managed hosting. Existing Cloud accounts keep their current access.",
   alternates: { canonical: "https://alavo.cc/pricing" },
 };
 

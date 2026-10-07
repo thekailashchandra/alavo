@@ -117,7 +117,7 @@ export function FeaturesSection() {
             id="features-heading"
             className="mt-4 text-3xl font-semibold tracking-tight text-[var(--foreground)] md:text-4xl"
           >
-            Everything in a free habit tracker, nothing you don&apos;t need
+            A calm habit tracker, nothing you don&apos;t need
           </h2>
           <p className="mt-3 text-base text-[var(--muted)]">
             A Today home, streak tracking, heatmaps, and a journal — on web,

@@ -52,8 +52,8 @@ export default function RefundPage() {
       <p>
         There is nothing to cancel. Alavo does not set up auto-debit, UPI
         mandates, or recurring charges. Your plan simply does not renew at the
-        end of its period — you stay on the Free plan automatically. No action
-        is needed to stop being charged.
+        end of its period. Alavo does not charge you again unless you buy
+        another period. Access then follows your account&apos;s current rules.
       </p>
 
       <h2>5. How to request a refund</h2>

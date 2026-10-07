@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
       signature: params.razorpay_signature,
     });
     if (!valid) return jsonError("Invalid payment signature", 400);
+    if (params.razorpay_payment_link_status !== "paid") {
+      return jsonError("Payment is not complete", 400);
+    }
 
     const result = await fulfillPaidPayment({
       paymentLinkId: params.razorpay_payment_link_id,

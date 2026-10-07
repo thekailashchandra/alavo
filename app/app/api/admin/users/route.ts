@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { applyPaidSku } from "@/lib/billing/apply-purchase";
 import { isSku } from "@/lib/billing/entitlements";
 import { trialWindow } from "@/lib/billing/entitlements";
+import { shouldStartLegacyTrial } from "@/lib/billing/cloud-access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEntitlementSnapshot } from "@/lib/billing/access";
 
@@ -140,7 +141,7 @@ export async function POST(req: NextRequest) {
         emailVerified: new Date(),
         passwordHash: null,
         provider: "EMAIL",
-        ...trialWindow(),
+        ...(shouldStartLegacyTrial(new Date()) ? trialWindow() : {}),
       },
     });
 

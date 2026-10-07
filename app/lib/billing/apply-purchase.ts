@@ -1,7 +1,9 @@
 import { amountMinorUnits, type BillingSku } from "@alavo/brand";
 import { prisma } from "@/lib/prisma";
 import { accessUntil } from "@/lib/billing/entitlements";
-import type { PlanCode } from "@prisma/client";
+import type { Prisma, PlanCode } from "@prisma/client";
+
+type BillingDb = Prisma.TransactionClient | typeof prisma;
 
 const PLAN_RANK: Record<PlanCode, number> = {
   FREE: 0,
@@ -15,9 +17,13 @@ function planForSku(sku: BillingSku): PlanCode | null {
   return null;
 }
 
-export async function applyPaidSku(userId: string, sku: BillingSku) {
+export async function applyPaidSku(
+  userId: string,
+  sku: BillingSku,
+  db: BillingDb = prisma
+) {
   const now = new Date();
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id: userId },
     select: {
       plan: true,
@@ -28,7 +34,7 @@ export async function applyPaidSku(userId: string, sku: BillingSku) {
   if (!user) throw new Error("User not found");
 
   if (sku.startsWith("ADDON_")) {
-    await prisma.userAddon.upsert({
+    await db.userAddon.upsert({
       where: { userId_sku: { userId, sku } },
       update: { purchasedAt: now, expiresAt: null },
       create: { userId, sku, purchasedAt: now, expiresAt: null },
@@ -37,7 +43,7 @@ export async function applyPaidSku(userId: string, sku: BillingSku) {
   }
 
   if (sku === "LIFETIME") {
-    await prisma.user.update({
+    await db.user.update({
       where: { id: userId },
       data: {
         lifetime: true,
@@ -58,10 +64,10 @@ export async function applyPaidSku(userId: string, sku: BillingSku) {
   const until = accessUntil(sku, base);
   const keepTeam = user.plan === "TEAM" && PLAN_RANK[user.plan] >= PLAN_RANK[nextPlan];
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      plan: keepTeam ? "TEAM" : nextPlan,
+  await db.user.update({
+      where: { id: userId },
+      data: {
+        plan: keepTeam ? "TEAM" : nextPlan,
       planExpiresAt: user.lifetime ? null : until,
     },
   });

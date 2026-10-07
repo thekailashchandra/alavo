@@ -1,0 +1,29 @@
+# Postgres plus the Alavo app.
+# Supabase Auth keys are still required in app/.env. See docs/self-hosting/README.md.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: alavo
+      POSTGRES_PASSWORD: alavo
+      POSTGRES_DB: alavo
+    volumes:
+      - alavo-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    depends_on:
+      - db
+    env_file:
+      - app/.env
+    environment:
+      DEPLOYMENT_MODE: self-hosted
+      DATABASE_URL: postgresql://alavo:alavo@db:5432/alavo
+      DIRECT_URL: postgresql://alavo:alavo@db:5432/alavo
+    ports:
+      - "3000:3000"
+
+volumes:
+  alavo-db:

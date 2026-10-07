@@ -4,6 +4,7 @@ import { TEAM_SEAT_LIMIT } from "@alavo/brand";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { jsonOk, jsonError, handleApiError } from "@/lib/api";
+import { enforceRateLimit } from "@/lib/with-rate-limit";
 
 const joinSchema = z.object({
   inviteCode: z
@@ -14,8 +15,20 @@ const joinSchema = z.object({
     .transform((value) => value.toUpperCase()),
 });
 
+/**
+ * Joining a group does not change the member's own plan row.
+ * If the owner has an active Team plan, existing entitlement checks
+ * still let members use that owner's shared seats. That is the paid
+ * team product, and it is unchanged for accounts that can already
+ * open the workspace.
+ * New unpaid Cloud accounts cannot call this route, so an invite code
+ * alone cannot unlock Alavo Cloud.
+ */
 export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, "groups:join", 8, 15 * 60_000);
+    if (limited) return limited;
+
     const { user, error } = await requireAuth(req);
     if (error) return error;
 

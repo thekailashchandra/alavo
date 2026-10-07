@@ -27,7 +27,7 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "How many habits should I track at once?",
     answer:
-      "Start with two. Maybe three. Every extra habit makes the others weaker. Once the first ones feel automatic — often around week three — add another. Alavo’s free plan covers up to five active habits, which is plenty for a serious routine.",
+      "Start with two. Maybe three. Every extra habit makes the others weaker. Once the first ones feel automatic — often around week three — add another. Self-hosted Alavo does not cap your habits. Existing Cloud accounts keep the limits they already have.",
   },
   {
     question: "Is my data private?",
@@ -40,9 +40,9 @@ export const HOME_FAQS: FaqItem[] = [
       "Alavo is a progressive web app. Open it in the browser, then add it to your home screen on iPhone or Android. You get a Today view, streaks, reminders, and a journal without a separate store download.",
   },
   {
-    question: "What is the best free habit tracker?",
+    question: "Is Alavo free?",
     answer:
-      "The best free habit tracker is the one you actually open every day. Alavo is free forever for core tracking: up to five habits, a Today checklist, basic streaks, a journal, and 30-day history. Pay only if you want unlimited habits, full analytics, and lifetime access.",
+      "The software is free when you self-host it. Alavo Cloud, the hosted app, is paid. Existing Cloud accounts keep the access they already have, including any free limits or paid plan.",
   },
   {
     question: "How do I track habits daily?",

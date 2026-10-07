@@ -181,8 +181,7 @@ export const PRO_FEATURES = [
   "Unlimited habits",
   "Full history (not capped at 30 days)",
   "Advanced stats, charts, and heatmaps",
-  "AI coaching, formatted export, and custom alerts",
-  "14-day Pro trial on every new account",
+  "Coaching from your stats, formatted export, and custom alerts",
 ] as const;
 
 export const TEAM_FEATURES = [
@@ -204,7 +203,7 @@ export const PRICING_COPY: Record<
   }
 > = {
   IN: {
-    intro: `Every new account gets ${TRIAL_DAYS} days of Pro. After that, Free stays forever for up to ${FREE_HABIT_LIMIT} habits, basic streaks, and ${FREE_HISTORY_DAYS}-day history. Pay only if you want analytics or unlimited habits.`,
+    intro: "Self-host Alavo for free, or use paid Alavo Cloud. Existing Cloud accounts keep the access they already have.",
     lifetimeHint: "One payment via Razorpay. No recurring billing.",
     lifetimeNote: "Best value for long-term tracking in India",
     monthlyHint: "Unlimited habits + analytics, billed monthly",
@@ -212,7 +211,7 @@ export const PRICING_COPY: Record<
     processor: "Razorpay",
   },
   INTL: {
-    intro: `Every new account gets ${TRIAL_DAYS} days of Pro. After that, Free stays forever for up to ${FREE_HABIT_LIMIT} habits, basic streaks, and ${FREE_HISTORY_DAYS}-day history. Pay only if you want analytics or unlimited habits.`,
+    intro: "Self-host Alavo for free, or use paid Alavo Cloud. Existing Cloud accounts keep the access they already have.",
     lifetimeHint: "One payment. No recurring billing.",
     lifetimeNote: "Pay once for Pro, forever",
     monthlyHint: "Unlimited habits + analytics, billed monthly",

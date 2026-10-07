@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   applicationName: "Alavo",
   keywords: [
     "Alavo",
-    "free habit tracker",
+    "open source habit tracker",
     "habit tracker online",
     "daily habit tracker",
     "streak tracking",

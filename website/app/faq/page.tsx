@@ -9,7 +9,7 @@ import { SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Habit Tracker FAQ",
   description:
-    "Answers about habit streaks, how long it takes to form a habit, the 21/90 rule, privacy, and the best free habit tracker.",
+    "Answers about habit streaks, how long it takes to form a habit, the 21/90 rule, privacy, and self-hosting versus Alavo Cloud.",
   alternates: { canonical: `${SITE_URL}/faq` },
 };
 

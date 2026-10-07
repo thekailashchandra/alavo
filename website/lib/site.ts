@@ -5,6 +5,6 @@ export const APP_URL = (
 
 export const SITE_NAME = "Alavo";
 export const DEFAULT_TITLE =
-  "Free Habit Tracker Online — Streaks, Heatmaps & Daily Goals | Alavo";
+  "Alavo — Open-source habit tracker. Self-host free, or use paid Cloud.";
 export const DEFAULT_DESCRIPTION =
-  "Free daily habit tracker with streak tracking, goal tracking, and a visual heatmap. Build better habits and track your progress online. Core tracking is free forever.";
+  "A privacy-first, open-source habit tracker. Self-host it for free, or let Alavo host it for you. Alavo Cloud is paid managed hosting.";

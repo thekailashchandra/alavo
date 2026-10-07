@@ -43,7 +43,7 @@ export default function InsightsIndexPage() {
           How to build a daily habit tracking routine
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--muted)]">
-          Short, practical guides from Alavo — a free habit tracker with streaks,
+          Short, practical guides from Alavo — an open-source habit tracker with streaks,
           heatmaps, and a journal. Start with two habits. Never miss twice.
         </p>
         <ul className="mt-10 grid gap-4 md:grid-cols-2">

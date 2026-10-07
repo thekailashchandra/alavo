@@ -239,6 +239,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // JSON export returns the account's own habits, logs, and journal.
+    // The 30-day history cap limits in-app analytics for grandfathered
+    // free Cloud users. It does not strip their export. Data portability
+    // stays available, including before a new Cloud user has paid.
     const data = await loadExportData(user!.id);
 
     if (format === "csv") {

@@ -16,6 +16,7 @@ import { loadRedeemableCoupon, recordCouponRedemption } from "@/lib/billing/rede
 import { getEntitlementSnapshot } from "@/lib/billing/access";
 import { notifySubscription } from "@/lib/billing/notify";
 import { currencyFromRequest } from "@/lib/billing/market";
+import { isSelfHosted } from "@/lib/deployment-mode";
 import { amountMinorForLiveSku, getLivePackage } from "@/lib/billing/catalog";
 
 const checkoutSchema = z.object({
@@ -28,6 +29,10 @@ export async function POST(req: NextRequest) {
   try {
     const limited = enforceRateLimit(req, "billing:checkout", 10, 60_000);
     if (limited) return limited;
+
+    if (isSelfHosted()) {
+      return jsonError("Billing is not used in self-hosted mode. The core app is already unlocked.", 400);
+    }
 
     const { user, error } = await requireAuth(req);
     if (error) return error;

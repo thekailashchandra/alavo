@@ -22,7 +22,7 @@ export function SiteFooter() {
           <ul className="mt-3 space-y-2 text-sm text-[var(--muted)]">
             <li>
               <Link href="/" className="hover:text-[var(--foreground)]">
-                Free habit tracker
+                Alavo
               </Link>
             </li>
             <li>

@@ -1,13 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { couponError } from "@/lib/billing/coupons";
 import { normalizeCouponCode } from "@/lib/billing/coupons";
+import type { Prisma } from "@prisma/client";
 
-export async function recordCouponRedemption(opts: {
-  couponId: string;
-  userId: string;
-  paymentId?: string;
-}) {
-  await prisma.couponRedemption.upsert({
+type BillingDb = Prisma.TransactionClient | typeof prisma;
+
+export async function recordCouponRedemption(
+  opts: {
+    couponId: string;
+    userId: string;
+    paymentId?: string;
+  },
+  db: BillingDb = prisma
+) {
+  await db.couponRedemption.upsert({
     where: { couponId_userId: { couponId: opts.couponId, userId: opts.userId } },
     update: { paymentId: opts.paymentId ?? undefined },
     create: {

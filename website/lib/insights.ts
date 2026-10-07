@@ -57,7 +57,7 @@ export const INSIGHTS: InsightArticle[] = [
       {
         heading: "How Alavo helps while the habit is forming",
         paragraphs: [
-          "Alavo is a free habit tracker with a Today home screen, streak tracking, and a journal. During the messy middle — weeks three to eight — people quit because the behaviour still takes effort. Seeing a week of purple rings is often enough proof that you are still in the game.",
+          "Alavo is a habit tracker with a Today home screen, streak tracking, and a journal. During the messy middle — weeks three to eight — people quit because the behaviour still takes effort. Seeing a week of purple rings is often enough proof that you are still in the game.",
           "If you want the research in one line: give a new habit two months of honest tracking before you decide it “doesn’t work.” Open Alavo, tap the habit, write one sentence in the journal. Repeat tomorrow.",
         ],
       },
@@ -95,7 +95,7 @@ export const INSIGHTS: InsightArticle[] = [
         paragraphs: [
           "Days 1–21: two habits only. Same time daily. Check them off on Today. Journal three nights a week. If a habit feels like a fight, shrink it (ten pushups, not a full workout).",
           "Days 22–66: protect the streak without worshipping it. Use never-miss-twice. Watch week rings more than the big number. This is when most people get bored. Boredom is not failure; it is the work.",
-          "Days 67–90: decide if this is lifestyle. Keep it, replace it, or add one new habit — not five. Alavo’s free plan is built for this: up to five active habits, forever, without turning your life into a dashboard.",
+          "Days 67–90: decide if this is lifestyle. Keep it, replace it, or add one new habit — not five. A short list is enough. It does not need to become a dashboard.",
         ],
       },
     ],
@@ -117,7 +117,7 @@ export const INSIGHTS: InsightArticle[] = [
         heading: "Start small",
         paragraphs: [
           "Two habits. Not five. Not ten. Two. Add more when those feel automatic. Every habit you add makes all of them weaker because willpower is not a stack of independent batteries — it is one morning.",
-          "Alavo’s free plan caps active habits at five for a reason. Unlimited lists look ambitious. They also become a museum of guilt. Track what you will actually do this week.",
+          "A short habit list is deliberate. Unlimited lists look ambitious. They also become a museum of guilt. Track what you will actually do this week.",
         ],
       },
       {
@@ -190,9 +190,9 @@ export const INSIGHTS: InsightArticle[] = [
   },
   {
     slug: "best-free-habit-tracker",
-    title: "What Is the Best Free Habit Tracker?",
+    title: "What to look for in a habit tracker",
     description:
-      "The best free habit tracker is the one you open every day. Alavo is free forever for core tracking — streaks, Today checklist, journal, and 30-day history.",
+      "The best habit tracker is the one you open every day. Alavo is open source and free to self-host. Alavo Cloud is paid managed hosting.",
     date: "2026-08-19",
     keywords: [
       "best free habit tracker",
@@ -205,17 +205,17 @@ export const INSIGHTS: InsightArticle[] = [
         heading: "Fast beats fancy",
         paragraphs: [
           "A good habit tracker app needs to be fast. If checking off a habit takes more than two seconds, you will stop doing it. Alavo loads a Today home screen with week rings, a streak pill, and one-tap complete. That is the job.",
-          "Many “free” trackers bury the check-in behind social feeds, coins, or a paywall on day four. Alavo’s free plan is the product: up to five active habits, basic streaks, a journal, and 30-day history. Pro is optional depth — unlimited habits, full analytics, heatmaps, and lifetime unlocks.",
+          "Many trackers bury the check-in behind social feeds or coins. Alavo keeps the Today screen simple. Self-host the open-source app, or use paid Alavo Cloud if you want it hosted. Existing Cloud accounts keep the access they already have.",
         ],
       },
       {
         heading: "What to look for in a free daily habit tracker",
         paragraphs: [
           "You want a Today view, not a blank spreadsheet. You want streaks without shame. You want a way to see the year (calendar or heatmap) and a few honest numbers (current streak, longest streak, completion rate). You want your data to be exportable.",
-          "Alavo includes those pieces. Habits can be daily, specific weekdays, or times-per-week. You can install it as a PWA on your phone. Reminders, a journal, and a 14-day Pro trial on every new account are included so you can feel the full tracker before you decide to pay.",
+          "Alavo includes those pieces. Habits can be daily, specific weekdays, or times-per-week. You can install it as a PWA on your phone. Reminders and a journal are part of the app. Self-hosting does not require a subscription.",
         ],
         bullets: [
-          "Free forever for core tracking — not a 7-day demo",
+          "Open source and free to self-host",
           "Works in the browser and on your home screen",
           "Export JSON anytime; privacy policy is public",
           "Built as a calm purple UI, not a noisy game",
@@ -224,8 +224,8 @@ export const INSIGHTS: InsightArticle[] = [
       {
         heading: "Online, on your phone, without another store account",
         paragraphs: [
-          "Search “habit tracker app for my phone” and you will find dozens of store listings. Alavo is the web app at alavo.cc and app.alavo.cc. Create a free account, add it to your home screen, and you have a phone habit tracker with the same Today view you use on desktop.",
-          "If you want unlimited habits, advanced charts, and full history, upgrade. If you do not, keep Free. The point of a tracker is not to collect plans. The point is a daily habit tracking routine that runs on autopilot.",
+          "Search “habit tracker app for my phone” and you will find dozens of store listings. Alavo is the web app at alavo.cc and app.alavo.cc. Add it to your home screen and you have the same Today view you use on desktop.",
+          "Self-host if you want the full tracker on your own server. Use Alavo Cloud if you want it hosted. The point of a tracker is a daily routine that runs on autopilot.",
         ],
       },
     ],

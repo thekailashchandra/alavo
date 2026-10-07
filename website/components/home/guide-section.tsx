@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { APP_URL } from "@/lib/site";
 
 export function GuideSection() {
   return (
@@ -16,7 +15,7 @@ export function GuideSection() {
           How to use this habit tracker
         </h2>
         <p className="mt-4 text-base leading-relaxed text-[var(--muted)]">
-          Create a free Alavo account, then tap Add on Today. Give the habit a
+          Open Alavo, then tap Add on Today. Give the habit a
           name, pick an icon, and choose daily, weekdays, or a weekly target.
           Each day, tap the habit to mark it done. The streak counts itself.
           The week rings fill themselves in.
@@ -24,9 +23,9 @@ export function GuideSection() {
         <p className="mt-4 text-base leading-relaxed text-[var(--muted)]">
           Analytics shows your history and charts. The journal captures a short
           review of the day. Settings lets you edit, reorder, archive, and
-          export. Core tracking stays free for up to five habits.{" "}
-          <Link href={`${APP_URL}/signup`} className="font-medium text-[var(--primary)] underline-offset-2 hover:underline">
-            Start free
+          export. Self-host for the full app, or use paid Alavo Cloud.{" "}
+          <Link href="/self-host" className="font-medium text-[var(--primary)] underline-offset-2 hover:underline">
+            Self-host for free
           </Link>
           .
         </p>

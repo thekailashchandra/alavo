@@ -2,6 +2,14 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { trialWindow } from "@/lib/billing/entitlements";
+import {
+  hasCloudWorkspaceAccess,
+  isGrandfatheredCloudUser,
+  shouldStartLegacyTrial,
+  workspaceApiRequiresCloudPayment,
+} from "@/lib/billing/cloud-access";
+import { isSelfHosted } from "@/lib/deployment-mode";
+import { getEntitlementSnapshot } from "@/lib/billing/access";
 import { isSuperAdminEmail } from "@/lib/admin-emails";
 import {
   RegistrationClosedError,
@@ -96,6 +104,7 @@ async function ensureAppUser(sessionUser: {
   const provider =
     sessionUser.appMetadata?.provider === "google" ? "GOOGLE" : "EMAIL";
 
+  const createdAt = new Date();
   return prisma.user.create({
     data: {
       id: sessionUser.id,
@@ -103,7 +112,7 @@ async function ensureAppUser(sessionUser: {
       emailVerified: verifiedAt,
       passwordHash: null,
       provider,
-      ...trialWindow(),
+      ...(shouldStartLegacyTrial(createdAt) ? trialWindow(createdAt) : {}),
     },
     select: USER_SELECT,
   });
@@ -184,7 +193,7 @@ export function rememberAuthUser(user: AppUser) {
   authMemo = { ...authMemo, user };
 }
 
-export async function requireAuth(_req?: Request) {
+export async function requireAuth(req?: Request) {
   const user = await getAuthUser();
   if (!user) {
     return {
@@ -192,6 +201,34 @@ export async function requireAuth(_req?: Request) {
       error: Response.json({ error: "Unauthorized" }, { status: 401 }),
     };
   }
+
+  if (
+    req &&
+    workspaceApiRequiresCloudPayment(req.url) &&
+    !isSelfHosted() &&
+    !isGrandfatheredCloudUser(user.createdAt)
+  ) {
+    const snapshot = await getEntitlementSnapshot(user.id);
+    const allowed = hasCloudWorkspaceAccess({
+      createdAt: user.createdAt,
+      lifetime: snapshot.lifetime,
+      status: snapshot.status,
+      selfHosted: false,
+    });
+    if (!allowed) {
+      return {
+        user,
+        error: Response.json(
+          {
+            error: "Alavo Cloud requires a paid plan before you can use the hosted app.",
+            code: "CLOUD_PAYWALL",
+          },
+          { status: 402 }
+        ),
+      };
+    }
+  }
+
   return { user, error: null as Response | null };
 }
 

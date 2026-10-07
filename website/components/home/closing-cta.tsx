@@ -13,15 +13,15 @@ export function ClosingCta() {
           Your calmer habit tracker is one tap away
         </h2>
         <p className="mx-auto mt-3 max-w-lg text-base text-[var(--muted)]">
-          Create a free account — 14 days of Pro included — then keep this free
-          habit tracker for core tracking forever.
+          Self-host the open-source tracker for free, or use Alavo Cloud if you
+          want the app hosted for you.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link href={`${appUrl}/signup`} className="btn-primary h-12 px-7 text-base">
-            Start free with Alavo
+            Get Alavo Cloud
           </Link>
-          <Link href={`${appUrl}/login`} className="btn-secondary h-12 px-7 text-base">
-            Sign in
+          <Link href="/self-host" className="btn-secondary h-12 px-7 text-base">
+            Self-host for free
           </Link>
         </div>
       </div>

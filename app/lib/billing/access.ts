@@ -1,3 +1,5 @@
+import { isGrandfatheredCloudUser } from "@/lib/billing/cloud-access";
+import { applyDeploymentEntitlements } from "@/lib/deployment-mode";
 import { prisma } from "@/lib/prisma";
 import {
   resolveEntitlements,
@@ -39,9 +41,10 @@ async function isTeamCovered(userId: string, now: Date) {
 export async function ensureTrial(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { trialStartedAt: true },
+    select: { trialStartedAt: true, createdAt: true },
   });
   if (!user || user.trialStartedAt) return;
+  if (!isGrandfatheredCloudUser(user.createdAt)) return;
   const window = trialWindow();
   await prisma.user.update({
     where: { id: userId },
@@ -68,33 +71,37 @@ export async function getEntitlementSnapshot(
   });
 
   if (!user) {
-    return resolveEntitlements({
-      plan: "FREE",
-      planExpiresAt: null,
-      lifetime: false,
-      trialStartedAt: null,
-      trialEndsAt: null,
-      addons: [],
-      teamCovered: false,
-    });
+    return applyDeploymentEntitlements(
+      resolveEntitlements({
+        plan: "FREE",
+        planExpiresAt: null,
+        lifetime: false,
+        trialStartedAt: null,
+        trialEndsAt: null,
+        addons: [],
+        teamCovered: false,
+      })
+    );
   }
 
   const teamCovered = await isTeamCovered(userId, now);
 
-  return resolveEntitlements(
-    {
-      plan: user.plan,
-      planExpiresAt: user.planExpiresAt,
-      lifetime: user.lifetime,
-      trialStartedAt: user.trialStartedAt,
-      trialEndsAt: user.trialEndsAt,
-      addons: user.addons.map((addon) => ({
-        sku: addon.sku as BillingSku,
-        expiresAt: addon.expiresAt,
-      })),
-      teamCovered,
-    },
-    now
+  return applyDeploymentEntitlements(
+    resolveEntitlements(
+      {
+        plan: user.plan,
+        planExpiresAt: user.planExpiresAt,
+        lifetime: user.lifetime,
+        trialStartedAt: user.trialStartedAt,
+        trialEndsAt: user.trialEndsAt,
+        addons: user.addons.map((addon) => ({
+          sku: addon.sku as BillingSku,
+          expiresAt: addon.expiresAt,
+        })),
+        teamCovered,
+      },
+      now
+    )
   );
 }
 

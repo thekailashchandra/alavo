@@ -3,6 +3,8 @@ import { BILLING_CATALOG } from "@alavo/brand";
 import { requireAuth } from "@/lib/auth";
 import { jsonOk, handleApiError } from "@/lib/api";
 import { getEntitlementSnapshot } from "@/lib/billing/access";
+import { hasCloudWorkspaceAccess } from "@/lib/billing/cloud-access";
+import { isSelfHosted } from "@/lib/deployment-mode";
 import { razorpayConfigured } from "@/lib/billing/razorpay";
 import { prisma } from "@/lib/prisma";
 
@@ -27,6 +29,12 @@ export async function GET(req: NextRequest) {
     });
 
     return jsonOk({
+      cloudAccess: hasCloudWorkspaceAccess({
+        createdAt: user!.createdAt,
+        lifetime: billing.lifetime,
+        status: billing.status,
+        selfHosted: isSelfHosted(),
+      }),
       billing,
       payments: payments.map((payment) => ({
         ...payment,

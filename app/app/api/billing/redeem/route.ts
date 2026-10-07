@@ -8,6 +8,7 @@ import { grantSkuForCoupon } from "@/lib/billing/coupons";
 import { loadRedeemableCoupon, recordCouponRedemption } from "@/lib/billing/redeem";
 import { getEntitlementSnapshot } from "@/lib/billing/access";
 import { isSku } from "@/lib/billing/entitlements";
+import { isSelfHosted } from "@/lib/deployment-mode";
 
 const redeemSchema = z.object({
   code: z.string().min(4).max(24),
@@ -17,6 +18,10 @@ export async function POST(req: NextRequest) {
   try {
     const limited = enforceRateLimit(req, "billing:redeem", 10, 60_000);
     if (limited) return limited;
+
+    if (isSelfHosted()) {
+      return jsonError("Coupons are not used in self-hosted mode.", 400);
+    }
 
     const { user, error } = await requireAuth(req);
     if (error) return error;

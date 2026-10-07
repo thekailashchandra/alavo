@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site-shell";
 
 export const metadata: Metadata = {
-  title: "About Alavo — Free Habit Tracker",
+  title: "About Alavo",
   description:
-    "Alavo is a free habit tracking app for daily routines, streak tracking, heatmaps, and a simple journal.",
+    "Alavo is an open-source habit tracker for daily routines, streak tracking, heatmaps, and a simple journal. Self-host it, or use paid Alavo Cloud.",
   alternates: { canonical: "https://alavo.cc/about" },
   openGraph: {
     title: "About Alavo",
@@ -29,7 +29,7 @@ export default function AboutPage() {
       <ul>
         <li>
           Create and organize personal habits in a{" "}
-          <Link href="/">free habit tracker</Link>
+          <Link href="/">habit tracker</Link>
         </li>
         <li>Mark habits complete each day on the Today screen</li>
         <li>

@@ -18,7 +18,7 @@ import { HOME_FAQS } from "@/lib/faqs";
 import { APP_URL, DEFAULT_DESCRIPTION, DEFAULT_TITLE, SITE_URL } from "@/lib/site";
 
 const HERO_STATS = [
-  "Free daily habit tracker",
+  "Open source",
   "Streak tracking",
   "Visual heatmap",
   "Daily journal",
@@ -28,13 +28,12 @@ export const metadata: Metadata = {
   title: { absolute: DEFAULT_TITLE },
   description: DEFAULT_DESCRIPTION,
   keywords: [
-    "free habit tracker",
-    "free habit tracker online",
+    "open source habit tracker",
+    "self-hosted habit tracker",
     "daily habit tracker",
     "streak tracking",
     "habit heatmap",
     "habit tracker app",
-    "best free habit tracker",
     "Alavo",
   ],
   alternates: { canonical: SITE_URL },
@@ -64,12 +63,20 @@ export default function HomePage() {
           operatingSystem: "Web, iOS, Android",
           url: SITE_URL,
           description: DEFAULT_DESCRIPTION,
-          offers: {
-            "@type": "Offer",
-            price: "0",
-            priceCurrency: "INR",
-            description: "Free forever for core habit tracking",
-          },
+          offers: [
+            {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+              description: "Self-hosted open-source app",
+            },
+            {
+              "@type": "Offer",
+              price: "5",
+              priceCurrency: "USD",
+              description: "Alavo Cloud monthly hosting",
+            },
+          ],
         }}
       />
       <JsonLd data={faqJsonLd(HOME_FAQS)} />
@@ -84,18 +91,17 @@ export default function HomePage() {
         <section className="grid items-center gap-12 py-12 md:grid-cols-[1.05fr_0.95fr] md:gap-10 md:py-16 lg:py-20">
           <div className="hero-copy flex flex-col gap-6 md:max-w-xl">
             <span className="section-label w-fit">
-              Free habit tracker · 14-day Pro trial · PWA
+              Open source · Self-host free · Alavo Cloud is paid
             </span>
 
             <div className="space-y-4">
               <h1 className="brand-title text-4xl font-semibold leading-[1.05] tracking-tight text-[var(--foreground)] sm:text-5xl lg:text-6xl">
-                Free habit tracker{" "}
-                <span className="text-gradient">online</span>
+                Your habits.{" "}
+                <span className="text-gradient">Your data. Your choice.</span>
               </h1>
               <p className="max-w-lg text-base leading-relaxed text-[var(--muted)] md:text-lg">
-                Free daily habit tracker with streak tracking, goal tracking,
-                and a visual heatmap. Build better habits and track your
-                progress online. Core tracking stays free forever.
+                A beautiful, privacy-first, open-source habit tracker. Self-host
+                it for free, or let Alavo host it for you.
               </p>
             </div>
 
@@ -112,10 +118,16 @@ export default function HomePage() {
 
             <div className="flex flex-wrap items-center gap-3">
               <Link href={`${APP_URL}/signup`} className="btn-primary h-12 px-7 text-base">
-                Start free with Alavo
+                Get Alavo Cloud
               </Link>
-              <Link href={`${APP_URL}/login`} className="btn-secondary h-12 px-7 text-base">
-                Sign in
+              <Link href="/self-host" className="btn-secondary h-12 px-7 text-base">
+                Self-host for free
+              </Link>
+              <Link
+                href="https://github.com/thekailashchandra/alavo"
+                className="text-sm font-semibold text-[var(--alavo-primary)]"
+              >
+                View on GitHub
               </Link>
             </div>
 
