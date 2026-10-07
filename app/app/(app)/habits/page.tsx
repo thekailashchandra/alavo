@@ -286,8 +286,6 @@ export default function HabitsPage() {
 
     }));
 
-    toast.success("Habit created");
-
     invalidateCache("today:");
 
 
@@ -306,6 +304,8 @@ export default function HabitsPage() {
 
       const { habit } = await parseJson<{ habit: Habit }>(res);
 
+      toast.success("Habit created");
+
       setCachedData((prev) => ({
 
         habits: (prev?.habits ?? habits).map((h) =>
@@ -320,9 +320,16 @@ export default function HabitsPage() {
 
     } catch (error) {
 
-      if (previous) setCachedData(previous);
+      setCachedData(
+        previous ?? {
+          habits: habits.filter((habit) => habit.id !== tempId),
+        }
+      );
 
-      if (error instanceof ApiError && error.code === "PAYWALL") {
+      if (
+        error instanceof ApiError &&
+        (error.code === "PAYWALL" || error.code === "CLOUD_PAYWALL")
+      ) {
         setPaywall(true);
         toast.error(error.message);
         return;
