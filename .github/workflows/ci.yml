@@ -46,10 +46,10 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci_supabase_anon_key_placeholder_xx
           SUPABASE_SERVICE_ROLE_KEY: ci_supabase_service_role_placeholder_xx
-          VAPID_PUBLIC_KEY: BODmKiDtjfrrkZ_mQ_ON_hnEyPPDyw2WC3BqMcVMColmAzV27wKU9Nr6fUzQpPtIINEr_XVowGjwL4JXahs1fTc
+          VAPID_PUBLIC_KEY: BH8KRdRX36nVUiT0pknkt1StJPONmfZ21pp0ArcHZV-8xRv0i6mEWSfQLP8DqaLvmJNxIUvEQiaj-10dtSEkPyk
           VAPID_PRIVATE_KEY: 83OVI5Pvn2cCSkU4j1TcffEqUs8DTEb0wdvd1lp9czU
           VAPID_SUBJECT_EMAIL: mailto:ci@alavo.local
-          NEXT_PUBLIC_VAPID_PUBLIC_KEY: BODmKiDtjfrrkZ_mQ_ON_hnEyPPDyw2WC3BqMcVMColmAzV27wKU9Nr6fUzQpPtIINEr_XVowGjwL4JXahs1fTc
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: BH8KRdRX36nVUiT0pknkt1StJPONmfZ21pp0ArcHZV-8xRv0i6mEWSfQLP8DqaLvmJNxIUvEQiaj-10dtSEkPyk
         run: npm run build
 
       - name: Build website
